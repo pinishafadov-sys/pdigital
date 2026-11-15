@@ -35,6 +35,7 @@ model AdminUser {
   sessions           AdminSession[]
   auditLogs          AuditLog[]
   resetTokens        PasswordResetToken[]
+  stockMovements     StockMovement[]
   createdAt          DateTime       @default(now())
   updatedAt          DateTime       @updatedAt
 }
@@ -230,10 +231,38 @@ model ProductVariant {
   isActive          Boolean     @default(true)
   sortOrder         Int         @default(0)
   orderItems        OrderItem[]
+  stockMovements    StockMovement[]
   createdAt         DateTime    @default(now())
   updatedAt         DateTime    @updatedAt
 
   @@index([productId])
+}
+
+enum StockReason {
+  ONLINE_SALE     // נמכר באתר
+  STORE_SALE      // נמכר בחנות
+  RESTOCK         // הגיעה סחורה
+  ADJUSTMENT      // תיקון ידני
+  RETURN          // החזרה
+  ORDER_CANCELLED // הזמנה בוטלה
+}
+
+// Every change to a variant's stock is recorded here (who, when, why, and the stock after it).
+model StockMovement {
+  id         String         @id @default(cuid())
+  variantId  String
+  variant    ProductVariant @relation(fields: [variantId], references: [id], onDelete: Cascade)
+  change     Int
+  stockAfter Int
+  reason     StockReason
+  note       String?
+  orderId    String?
+  userId     String?
+  user       AdminUser?     @relation(fields: [userId], references: [id], onDelete: SetNull)
+  createdAt  DateTime       @default(now())
+
+  @@index([variantId, createdAt])
+  @@index([createdAt])
 }
 
 model ProductSpecValue {

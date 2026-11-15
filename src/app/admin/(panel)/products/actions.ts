@@ -5,6 +5,7 @@ import { redirect } from "next/navigation";
 import { audit, requireAdmin } from "@/lib/auth/session";
 import { db } from "@/lib/db";
 import { bool, FormError, handle, oneOf, optInt, optStr, safeUrl, shekels, slugFrom, str, type ActionState } from "@/lib/form";
+import { changeStock, setStock } from "@/lib/stock";
 import { saveImage } from "@/lib/upload";
 import type { ProductTag } from "@/generated/prisma/client";
 
@@ -91,9 +92,18 @@ export async function saveProduct(_prev: ActionState, fd: FormData): Promise<Act
       const keep = variants.filter((v) => v.id).map((v) => v.id!);
       await tx.productVariant.deleteMany({ where: { productId: pid, id: { notIn: keep } } });
       for (const v of variants) {
-        const { id: vid, ...vd } = v;
-        if (vid) await tx.productVariant.update({ where: { id: vid, productId: pid }, data: vd });
-        else await tx.productVariant.create({ data: { ...vd, productId: pid } });
+        const { id: vid, stock, ...vd } = v;
+        if (vid) {
+          await tx.productVariant.update({ where: { id: vid, productId: pid }, data: vd });
+          // Stock changes go through setStock so they are recorded in the stock history.
+          await setStock(vid, stock, { userId: me.id, note: "עדכון בעריכת מוצר" }, tx);
+        } else {
+          const created = await tx.productVariant.create({ data: { ...vd, stock, productId: pid } });
+          if (stock > 0)
+            await tx.stockMovement.create({
+              data: { variantId: created.id, change: stock, stockAfter: stock, reason: "RESTOCK", note: "מלאי התחלתי", userId: me.id },
+            });
+        }
       }
 
       await tx.productImage.deleteMany({ where: { productId: pid } });
@@ -132,7 +142,28 @@ export async function quickStock(fd: FormData) {
   const id = str(fd, "variantId", { max: 40 });
   const stock = Number(str(fd, "stock", { max: 10 }));
   if (!Number.isInteger(stock) || stock < 0) return;
-  await db.productVariant.update({ where: { id }, data: { stock } });
+  await setStock(id, stock, { userId: me.id, note: "עדכון מהיר מרשימת המוצרים" });
   await audit(me.id, "stock_updated", "ProductVariant", id);
-  revalidatePath("/admin/products");
+  revalidatePath("/", "layout");
+}
+
+/** In-store sale / restock / return / manual count from the stock screen. */
+export async function stockAction(_prev: ActionState, fd: FormData): Promise<ActionState> {
+  const me = await requireAdmin("EDITOR");
+  return handle(async () => {
+    const variantId = str(fd, "variantId", { required: "חסר מוצר", max: 40 });
+    const kind = oneOf(fd, "kind", ["STORE_SALE", "RESTOCK", "RETURN", "COUNT"] as const, "STORE_SALE");
+    const qty = Number(str(fd, "qty", { max: 6 }) || "1");
+    const note = optStr(fd, "note", 200);
+    if (!Number.isInteger(qty) || qty < 0 || qty > 100000) throw new FormError("כמות לא תקינה");
+    let after: number;
+    if (kind === "COUNT") after = await setStock(variantId, qty, { userId: me.id, note: note ?? "ספירת מלאי" });
+    else {
+      if (qty === 0) throw new FormError("יש להזין כמות");
+      after = await changeStock(variantId, kind === "STORE_SALE" ? -qty : qty, kind, { userId: me.id, note });
+    }
+    await audit(me.id, `stock_${kind.toLowerCase()}`, "ProductVariant", variantId);
+    revalidatePath("/", "layout");
+    return { ok: true, message: `עודכן. במלאי עכשיו: ${after}` };
+  });
 }

@@ -6,7 +6,8 @@ import { usePathname } from "next/navigation";
 const NAV = [
   { href: "/admin", label: "לוח בקרה", dot: "var(--bg-dark)" },
   { href: "/admin/orders", label: "הזמנות", dot: "var(--brand-blue-on-dark)" },
-  { href: "/admin/products", label: "מוצרים ומלאי", dot: "var(--brand-pink-on-dark)" },
+  { href: "/admin/products", label: "מוצרים", dot: "var(--brand-pink-on-dark)" },
+  { href: "/admin/stock", label: "מלאי", dot: "var(--brand-orange)" },
   { href: "/admin/categories", label: "קטגוריות", dot: "var(--brand-purple-light-on-dark)" },
   { href: "/admin/brands", label: "מותגים", dot: "var(--brand-orange)" },
   { href: "/admin/types", label: "סוגי מוצר ומפרט", dot: "var(--brand-blue-on-dark)" },

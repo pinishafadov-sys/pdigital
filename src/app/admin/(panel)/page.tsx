@@ -108,6 +108,7 @@ export default async function Dashboard({ searchParams }: { searchParams: Promis
             ) : (
               <p className="muted">אין מוצרים במלאי נמוך.</p>
             )}
+            <Link href="/admin/stock" style={{ color: "var(--brand-purple)" }}>ניהול מלאי ←</Link>
             <h2 style={{ marginTop: 20 }}>כניסות אחרונות</h2>
             <ul style={{ listStyle: "none", margin: 0, padding: 0, fontSize: 14 }}>
               {lastLogins.map((l) => (

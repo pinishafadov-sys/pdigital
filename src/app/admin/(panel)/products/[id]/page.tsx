@@ -2,7 +2,8 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { requireAdmin } from "@/lib/auth/session";
 import { db } from "@/lib/db";
-import { priceInput } from "@/lib/format";
+import { formatDateTime, priceInput } from "@/lib/format";
+import { STOCK_REASON_LABEL } from "@/lib/stock";
 import { AdminTop } from "../../AdminTop";
 import { ConfirmButton } from "../../ui";
 import { deleteProduct } from "../actions";
@@ -34,6 +35,14 @@ export default async function EditProductPage({ params, searchParams }: { params
     db.product.findMany({ where: { category: { isAccessories: true }, ...(isNew ? {} : { id: { not: id } }) }, select: { id: true, name: true }, orderBy: { name: "asc" }, take: 300 }),
   ]);
   if (!isNew && !product) notFound();
+  const history = isNew
+    ? []
+    : await db.stockMovement.findMany({
+        where: { variant: { productId: id } },
+        include: { variant: { select: { name: true, sku: true } }, user: { select: { displayName: true } } },
+        orderBy: { createdAt: "desc" },
+        take: 30,
+      });
 
   return (
     <>
@@ -82,6 +91,31 @@ export default async function EditProductPage({ params, searchParams }: { params
           types={types.map((t) => ({ id: t.id, name: t.name, fields: t.specFields.map((f) => ({ id: f.id, label: f.label, unit: f.unit })) }))}
           accessoryOptions={accessoryOptions}
         />
+        {!isNew && history.length > 0 && (
+          <section className="card table-wrap" aria-labelledby="stock-hist">
+            <div style={{ display: "flex", justifyContent: "space-between", gap: 8, flexWrap: "wrap" }}>
+              <h2 id="stock-hist">היסטוריית מלאי</h2>
+              <Link href="/admin/stock" style={{ color: "var(--brand-purple)" }}>למסך המלאי ←</Link>
+            </div>
+            <table className="table">
+              <thead><tr><th>מתי</th><th>וריאנט</th><th>פעולה</th><th>שינוי</th><th>אחרי</th><th>מי</th></tr></thead>
+              <tbody>
+                {history.map((m) => (
+                  <tr key={m.id}>
+                    <td className="muted">{formatDateTime(m.createdAt)}</td>
+                    <td>{m.variant.name ?? m.variant.sku}</td>
+                    <td>{STOCK_REASON_LABEL[m.reason]}{m.note ? ` · ${m.note}` : ""}</td>
+                    <td dir="ltr" style={{ color: m.change < 0 ? "var(--text-danger)" : "var(--text-success)", fontWeight: 600 }}>
+                      {m.change > 0 ? `+${m.change}` : m.change}
+                    </td>
+                    <td>{m.stockAfter}</td>
+                    <td>{m.user?.displayName ?? (m.reason === "ONLINE_SALE" ? "האתר" : "-")}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </section>
+        )}
         {!isNew && (
           <div className="card">
             <h2>מחיקת מוצר</h2>
