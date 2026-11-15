@@ -1,8 +1,10 @@
 import Link from "next/link";
 import { requireAdmin } from "@/lib/auth/session";
-import { formatPrice } from "@/lib/format";
+import { formatDateTime, formatPrice, isPlaceholder } from "@/lib/format";
 import { defaultReportDate, endOfDayIsrael, inventoryAt } from "@/lib/inventory-report";
+import { getSettings } from "@/lib/settings";
 import { AdminTop } from "../../AdminTop";
+import { PrintButtons } from "./PrintButtons";
 
 export const metadata = { title: "דוח מלאי" };
 
@@ -15,24 +17,36 @@ export default async function StockReportPage({ searchParams }: { searchParams: 
   const at = endOfDayIsrael(date)!;
   const { rows, totalQty, totalValue, missingCost } = await inventoryAt(at);
   const [y, m, d] = date.split("-");
+  const s = await getSettings();
 
   return (
     <>
       <AdminTop
         title="דוח מלאי"
         actions={
-          <a href={`/admin/reports/stock/export?date=${date}`} className="btn btn-primary" style={{ minHeight: 40 }} download>
-            הורדה לאקסל
-          </a>
+          <>
+            <a href={`/admin/reports/stock/export?date=${date}`} className="btn btn-primary" style={{ minHeight: 40 }} download>
+              הורדה לאקסל
+            </a>
+            <PrintButtons fileTitle={`דוח מלאי ${d}.${m}.${y}`} />
+          </>
         }
       />
-      <main className="admin-content">
-        <p className="help">
+      <main className="admin-content report">
+        <header className="print-only print-head">
+          <div>
+            <b>{isPlaceholder(s.business.legalName) ? s.business.name : s.business.legalName}</b>
+            {!isPlaceholder(s.business.address) && <span>{s.business.address}</span>}
+          </div>
+          <h1>דוח מלאי נכון לסוף יום {`${d}.${m}.${y}`}</h1>
+          <span>הופק בתאריך {formatDateTime(new Date())}</span>
+        </header>
+        <p className="help no-print">
           הדוח מראה כמה יחידות היו מכל מוצר <b>בסוף היום שבחרת</b>, ואת שווי המלאי לפי <b>מחיר העלות</b>. לדיווח השנתי בוחרים 31.12. הכמויות מחושבות
           לפי היסטוריית המלאי, ולכן נכונות גם אם מפיקים את הדוח מאוחר יותר.
         </p>
 
-        <form method="get" className="toolbar-row">
+        <form method="get" className="toolbar-row no-print">
           <label className="field" style={{ flexDirection: "row", alignItems: "center", gap: 10 }}>
             <span>מלאי נכון לסוף יום:</span>
             <input type="date" name="date" defaultValue={date} max={todayYmd()} style={{ width: "auto" }} />
@@ -88,6 +102,11 @@ export default async function StockReportPage({ searchParams }: { searchParams: 
             <p className="muted">לא היה מלאי בתאריך הזה, או שעדיין לא הוזנו מוצרים.</p>
           )}
         </section>
+        <footer className="print-only print-sign">
+          <span>נספר על ידי: ____________________</span>
+          <span>תאריך: ____________</span>
+          <span>חתימה: ____________________</span>
+        </footer>
       </main>
     </>
   );

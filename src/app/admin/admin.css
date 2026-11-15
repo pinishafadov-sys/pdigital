@@ -603,6 +603,135 @@
   color: var(--text-muted);
 }
 
+/* ---------- print / PDF (reports) */
+.print-only {
+  display: none;
+}
+
+@media print {
+  @page {
+    size: A4;
+    margin: 14mm 12mm;
+  }
+
+  html,
+  body,
+  .admin-body {
+    background: #fff !important;
+    color: #000 !important;
+    font-size: 11pt;
+  }
+
+  .admin-side,
+  .admin-top,
+  .no-print,
+  .a11y-fab,
+  .a11y-panel {
+    display: none !important;
+  }
+
+  .admin-shell {
+    display: block;
+  }
+
+  .admin-content {
+    padding: 0 !important;
+    gap: 10px;
+  }
+
+  .print-only {
+    display: flex;
+  }
+
+  .print-head {
+    flex-direction: column;
+    gap: 2px;
+    border-bottom: 2px solid #000;
+    padding-bottom: 8px;
+    margin-bottom: 4px;
+  }
+
+  .print-head div {
+    display: flex;
+    justify-content: space-between;
+    gap: 12px;
+  }
+
+  .print-head h1 {
+    margin: 6px 0 0;
+    font-size: 16pt;
+  }
+
+  .print-head > span {
+    font-size: 9pt;
+    color: #444;
+  }
+
+  .report .kpis {
+    grid-template-columns: repeat(4, 1fr);
+    gap: 6px;
+  }
+
+  .report .card {
+    border: 1px solid #999;
+    border-radius: 4px;
+    padding: 6px 8px;
+    box-shadow: none;
+    break-inside: auto;
+  }
+
+  .report .kpi .value {
+    font-size: 13pt !important;
+  }
+
+  .report .table {
+    font-size: 9.5pt;
+  }
+
+  .report .table th,
+  .report .table td {
+    padding: 4px 6px;
+    border-bottom: 1px solid #bbb;
+    color: #000;
+  }
+
+  .report .table thead {
+    display: table-header-group; /* repeat header on every page */
+  }
+
+  .report .table tfoot {
+    display: table-footer-group;
+  }
+
+  .report .table tr {
+    break-inside: avoid;
+  }
+
+  .report .table tr:hover td {
+    background: none;
+  }
+
+  .report .pill {
+    border: 1px solid #000;
+    background: none !important;
+    color: #000 !important;
+  }
+
+  .report .warn,
+  .report .form-error {
+    border: 1px solid #000;
+    background: none;
+    color: #000;
+  }
+
+  .print-sign {
+    justify-content: space-between;
+    gap: 16px;
+    margin-top: 28px;
+    font-size: 10pt;
+  }
+}
+
 /* ---------- stock screen (built for use on a phone at the counter) */
 .stock-list {
   display: flex;
