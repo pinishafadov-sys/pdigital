@@ -14,9 +14,12 @@ export async function createUser(_p: ActionState, fd: FormData): Promise<ActionS
     const password = String(fd.get("password") ?? "");
     const policy = passwordPolicyError(password, username);
     if (policy) throw new FormError(policy);
+    const email = str(fd, "email", { max: 120 }).toLowerCase();
+    if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) throw new FormError("כתובת מייל לא תקינה");
     const user = await db.adminUser.create({
       data: {
         username,
+        email: email || null,
         displayName: str(fd, "displayName", { required: "יש להזין שם לתצוגה", max: 60 }),
         role: oneOf(fd, "role", ["OWNER", "MANAGER", "EDITOR"] as const, "EDITOR"),
         passwordHash: await hashPassword(password),

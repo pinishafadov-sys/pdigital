@@ -37,6 +37,9 @@ export function proxy(request: NextRequest) {
   const requestHeaders = new Headers(request.headers);
   requestHeaders.set("x-nonce", nonce);
   requestHeaders.set("Content-Security-Policy", csp);
+  // Tells the root layout not to load analytics/pixels on admin pages (reset links carry tokens).
+  requestHeaders.delete("x-pd-admin");
+  if (isAdminHost || url.pathname.startsWith("/admin")) requestHeaders.set("x-pd-admin", "1");
 
   let response: NextResponse;
   if (isAdminHost && !url.pathname.startsWith("/admin")) {
@@ -50,6 +53,7 @@ export function proxy(request: NextRequest) {
   if (url.pathname.startsWith("/admin") || isAdminHost) {
     response.headers.set("X-Robots-Tag", "noindex, nofollow");
     response.headers.set("Cache-Control", "no-store");
+    response.headers.set("Referrer-Policy", "no-referrer");
   }
   return response;
 }

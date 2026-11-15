@@ -22,6 +22,7 @@ enum AdminRole {
 model AdminUser {
   id                 String         @id @default(cuid())
   username           String         @unique
+  email              String?        @unique // for password reset
   passwordHash       String
   displayName        String
   role               AdminRole      @default(EDITOR)
@@ -33,6 +34,7 @@ model AdminUser {
   lastLoginAt        DateTime?
   sessions           AdminSession[]
   auditLogs          AuditLog[]
+  resetTokens        PasswordResetToken[]
   createdAt          DateTime       @default(now())
   updatedAt          DateTime       @updatedAt
 }
@@ -50,6 +52,21 @@ model AdminSession {
   lastSeenAt DateTime  @default(now())
 
   @@index([userId])
+}
+
+// One-time password reset links. Only a SHA-256 hash of the token is stored.
+model PasswordResetToken {
+  id        String    @id @default(cuid())
+  tokenHash String    @unique
+  userId    String
+  user      AdminUser @relation(fields: [userId], references: [id], onDelete: Cascade)
+  expiresAt DateTime
+  usedAt    DateTime?
+  ip        String?
+  createdAt DateTime  @default(now())
+
+  @@index([userId, createdAt])
+  @@index([ip, createdAt])
 }
 
 // Rate limiting for login attempts per IP

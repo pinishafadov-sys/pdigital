@@ -78,6 +78,22 @@ export async function logoutAction() {
   redirect("/admin/login");
 }
 
+export async function updateEmailAction(_prev: ActionState, fd: FormData): Promise<ActionState> {
+  const me = await requireAdmin("EDITOR", { allowPasswordChange: true });
+  const email = str(fd, "email", { max: 120 }).toLowerCase();
+  const current = String(fd.get("current") ?? "");
+  if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return { error: "כתובת מייל לא תקינה" };
+  const user = await db.adminUser.findUniqueOrThrow({ where: { id: me.id } });
+  if (!(await verifyPassword(current, user.passwordHash))) return { error: "הסיסמה הנוכחית שגויה" };
+  try {
+    await db.adminUser.update({ where: { id: me.id }, data: { email: email || null } });
+  } catch {
+    return { error: "המייל הזה כבר משויך למשתמש אחר" };
+  }
+  await audit(me.id, "email_changed");
+  return { ok: true, message: email ? "המייל נשמר. אליו יישלחו קישורי איפוס סיסמה." : "המייל הוסר" };
+}
+
 export async function changePasswordAction(_prev: ActionState, fd: FormData): Promise<ActionState> {
   const me = await requireAdmin("EDITOR", { allowPasswordChange: true });
   const current = String(fd.get("current") ?? "");

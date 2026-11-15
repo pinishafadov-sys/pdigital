@@ -1,5 +1,5 @@
 import { requireAdmin } from "@/lib/auth/session";
-import { changePasswordAction } from "../../auth-actions";
+import { changePasswordAction, updateEmailAction } from "../../auth-actions";
 import { AdminTop } from "../AdminTop";
 import { ActionForm } from "../ui";
 
@@ -36,6 +36,24 @@ export default async function AccountPage({ searchParams }: { searchParams: Prom
           </ActionForm>
         </div>
         <p className="help">אחרי שינוי הסיסמה, כל המכשירים האחרים שמחוברים לחשבון ינותקו אוטומטית.</p>
+        {!me.mustChangePassword && (
+          <div className="card">
+            <h2>מייל לשחזור סיסמה</h2>
+            <p className="muted" style={{ marginTop: 0 }}>
+              אם תשכח את הסיסמה, קישור לאיפוס יישלח למייל הזה. {me.email ? `כרגע: ${me.email}` : "עדיין לא הוגדר מייל."}
+            </p>
+            <ActionForm action={updateEmailAction} submitLabel="שמירת מייל">
+              <label className="field">
+                <span>כתובת מייל</span>
+                <input type="email" name="email" defaultValue={me.email ?? ""} autoComplete="email" dir="ltr" maxLength={120} />
+              </label>
+              <label className="field">
+                <span>סיסמה נוכחית (לאישור)</span>
+                <input type="password" name="current" autoComplete="current-password" required dir="ltr" />
+              </label>
+            </ActionForm>
+          </div>
+        )}
       </main>
     </>
   );

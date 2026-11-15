@@ -47,10 +47,13 @@ export async function generateMetadata(): Promise<Metadata> {
 }
 
 export default async function RootLayout({ children }: { children: React.ReactNode }) {
-  const nonce = (await headers()).get("x-nonce") ?? undefined;
+  const h = await headers();
+  const nonce = h.get("x-nonce") ?? undefined;
+  const isAdmin = h.get("x-pd-admin") === "1";
   const s = await getSettings();
-  const gaId = /^G-[A-Z0-9]+$/.test(s.seo.gaId) ? s.seo.gaId : null;
-  const gtmId = /^GTM-[A-Z0-9]+$/.test(s.seo.gtmId) ? s.seo.gtmId : null;
+  // No analytics or tracking pixels on admin pages.
+  const gaId = !isAdmin && /^G-[A-Z0-9]+$/.test(s.seo.gaId) ? s.seo.gaId : null;
+  const gtmId = !isAdmin && /^GTM-[A-Z0-9]+$/.test(s.seo.gtmId) ? s.seo.gtmId : null;
 
   return (
     <html
@@ -86,7 +89,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
             />
           </>
         )}
-        {!isPlaceholder(s.seo.facebookPixel) && /^\d+$/.test(s.seo.facebookPixel) && (
+        {!isAdmin && !isPlaceholder(s.seo.facebookPixel) && /^\d+$/.test(s.seo.facebookPixel) && (
           <script
             nonce={nonce}
             dangerouslySetInnerHTML={{
