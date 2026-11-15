@@ -79,19 +79,26 @@ export async function logoutAction() {
 }
 
 export async function updateEmailAction(_prev: ActionState, fd: FormData): Promise<ActionState> {
-  const me = await requireAdmin("EDITOR", { allowPasswordChange: true });
+  const me = await requireAdmin("OWNER");
+  // Only the site owner (the first owner account) holds the single recovery email.
+  const primary = await db.adminUser.findFirst({ where: { role: "OWNER" }, orderBy: { createdAt: "asc" } });
+  if (primary?.id !== me.id) return { error: "רק בעל האתר יכול להגדיר את מייל השחזור" };
   const email = str(fd, "email", { max: 120 }).toLowerCase();
   const current = String(fd.get("current") ?? "");
   if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return { error: "כתובת מייל לא תקינה" };
   const user = await db.adminUser.findUniqueOrThrow({ where: { id: me.id } });
   if (!(await verifyPassword(current, user.passwordHash))) return { error: "הסיסמה הנוכחית שגויה" };
   try {
-    await db.adminUser.update({ where: { id: me.id }, data: { email: email || null } });
+    await db.$transaction([
+      // Make sure no other account carries a recovery email.
+      db.adminUser.updateMany({ where: { id: { not: me.id } }, data: { email: null } }),
+      db.adminUser.update({ where: { id: me.id }, data: { email: email || null } }),
+    ]);
   } catch {
     return { error: "המייל הזה כבר משויך למשתמש אחר" };
   }
   await audit(me.id, "email_changed");
-  return { ok: true, message: email ? "המייל נשמר. אליו יישלחו קישורי איפוס סיסמה." : "המייל הוסר" };
+  return { ok: true, message: email ? "המייל נשמר. כל קישורי איפוס הסיסמה, של כל המשתמשים, יישלחו אליו בלבד." : "המייל הוסר" };
 }
 
 export async function changePasswordAction(_prev: ActionState, fd: FormData): Promise<ActionState> {

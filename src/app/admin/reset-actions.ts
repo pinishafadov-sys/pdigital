@@ -12,7 +12,7 @@ import { siteUrl } from "@/lib/settings";
 const TOKEN_MINUTES = 30;
 const MAX_PER_USER_PER_HOUR = 3;
 const MAX_PER_IP_PER_HOUR = 10;
-const GENERIC = "אם הפרטים נכונים ושמורה בחשבון כתובת מייל, נשלח אליה קישור לאיפוס הסיסמה. הקישור בתוקף 30 דקות.";
+const GENERIC = "אם הפרטים נכונים, נשלח קישור לאיפוס הסיסמה למייל של בעל האתר. הקישור בתוקף 30 דקות.";
 const sha256 = (v: string) => createHash("sha256").update(v).digest("hex");
 
 export async function requestResetAction(_prev: ActionState, fd: FormData): Promise<ActionState> {
@@ -29,7 +29,12 @@ export async function requestResetAction(_prev: ActionState, fd: FormData): Prom
   const user = await db.adminUser.findFirst({
     where: { isActive: true, OR: [{ username: ident }, { email: ident }] },
   });
-  if (!user?.email) {
+  // All reset links go ONLY to the owner's recovery email, whichever account asked.
+  const owner = await db.adminUser.findFirst({
+    where: { role: "OWNER", isActive: true, email: { not: null } },
+    orderBy: { createdAt: "asc" },
+  });
+  if (!user || !owner?.email) {
     await db.loginAttempt.create({ data: { ip, username: "reset:unknown", success: false } });
     return { ok: true, message: GENERIC };
   }
@@ -42,7 +47,7 @@ export async function requestResetAction(_prev: ActionState, fd: FormData): Prom
     data: { tokenHash: sha256(token), userId: user.id, ip, expiresAt: new Date(Date.now() + TOKEN_MINUTES * 60 * 1000) },
   });
   const link = `${siteUrl()}/admin/reset?token=${token}`;
-  await sendMail(passwordResetMail(user.email, user.displayName, link, TOKEN_MINUTES));
+  await sendMail(passwordResetMail(owner.email, `${user.displayName} (${user.username})`, link, TOKEN_MINUTES));
   await audit(user.id, "password_reset_requested");
   return { ok: true, message: GENERIC };
 }

@@ -1,4 +1,5 @@
 import { requireAdmin } from "@/lib/auth/session";
+import { db } from "@/lib/db";
 import { changePasswordAction, updateEmailAction } from "../../auth-actions";
 import { AdminTop } from "../AdminTop";
 import { ActionForm } from "../ui";
@@ -8,6 +9,8 @@ export const metadata = { title: "שינוי סיסמה" };
 export default async function AccountPage({ searchParams }: { searchParams: Promise<{ force?: string }> }) {
   const me = await requireAdmin("EDITOR", { allowPasswordChange: true });
   const { force } = await searchParams;
+  const primary = await db.adminUser.findFirst({ where: { role: "OWNER" }, orderBy: { createdAt: "asc" }, select: { id: true } });
+  const isPrimaryOwner = primary?.id === me.id;
   return (
     <>
       <AdminTop title="שינוי סיסמה" />
@@ -36,11 +39,12 @@ export default async function AccountPage({ searchParams }: { searchParams: Prom
           </ActionForm>
         </div>
         <p className="help">אחרי שינוי הסיסמה, כל המכשירים האחרים שמחוברים לחשבון ינותקו אוטומטית.</p>
-        {!me.mustChangePassword && (
+        {!me.mustChangePassword && isPrimaryOwner && (
           <div className="card">
-            <h2>מייל לשחזור סיסמה</h2>
+            <h2>מייל השחזור של האתר</h2>
             <p className="muted" style={{ marginTop: 0 }}>
-              אם תשכח את הסיסמה, קישור לאיפוס יישלח למייל הזה. {me.email ? `כרגע: ${me.email}` : "עדיין לא הוגדר מייל."}
+              זה המייל היחיד שמקבל קישורי איפוס סיסמה, שלך ושל כל משתמשי הניהול האחרים.{" "}
+              {me.email ? `כרגע: ${me.email}` : "עדיין לא הוגדר מייל."}
             </p>
             <ActionForm action={updateEmailAction} submitLabel="שמירת מייל">
               <label className="field">

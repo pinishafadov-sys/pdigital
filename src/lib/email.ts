@@ -42,17 +42,17 @@ const esc = (s: string) => s.replace(/[&<>"']/g, (c) => `&#${c.charCodeAt(0)};`)
 
 export function passwordResetMail(to: string, name: string, link: string, minutes: number): Mail {
   const subject = "איפוס סיסמה - מערכת הניהול pdigital";
-  const text = `שלום ${name},
+  const text = `שלום,
 
-התקבלה בקשה לאיפוס הסיסמה שלך למערכת הניהול של pdigital.
+התקבלה בקשה לאיפוס הסיסמה של המשתמש ${name} במערכת הניהול של pdigital.
 לבחירת סיסמה חדשה, היכנסו לקישור (בתוקף ${minutes} דקות, לשימוש פעם אחת):
 
 ${link}
 
 אם לא ביקשתם לאפס סיסמה, אפשר להתעלם מהמייל הזה. הסיסמה שלכם לא שונתה.`;
   const html = `<div dir="rtl" style="font-family:Arial,sans-serif;font-size:16px;line-height:1.6;color:#1b1a2e;max-width:520px">
-<p>שלום ${esc(name)},</p>
-<p>התקבלה בקשה לאיפוס הסיסמה שלך למערכת הניהול של <b>pdigital</b>.</p>
+<p>שלום,</p>
+<p>התקבלה בקשה לאיפוס הסיסמה של המשתמש <b>${esc(name)}</b> במערכת הניהול של <b>pdigital</b>.</p>
 <p><a href="${esc(link)}" style="display:inline-block;background:#f7901e;color:#15131f;font-weight:bold;padding:12px 28px;border-radius:10px;text-decoration:none">בחירת סיסמה חדשה</a></p>
 <p style="color:#5b5e78;font-size:14px">הקישור בתוקף ${minutes} דקות ולשימוש פעם אחת.<br>אם לא ביקשתם לאפס סיסמה, אפשר להתעלם מהמייל הזה. הסיסמה שלכם לא שונתה.</p>
 </div>`;

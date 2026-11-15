@@ -68,9 +68,7 @@ export default async function UsersPage() {
               <h2>משתמש חדש</h2>
               <ActionForm action={createUser} submitLabel="יצירת משתמש" resetOnSuccess>
                 <Text name="displayName" label="שם לתצוגה" required />
-                <Text name="username" label="שם משתמש (באנגלית)" required dir="ltr" />
-                <Text name="email" label="מייל (לשחזור סיסמה)" type="email" dir="ltr" />
-                <Text name="password" label="סיסמה ראשונית" type="password" required dir="ltr" hint="לפחות 10 תווים, אותיות וספרות. יוחלף בכניסה הראשונה." />
+                <Text name="username" label="שם משתמש (באנגלית)" required dir="ltr" />                <Text name="password" label="סיסמה ראשונית" type="password" required dir="ltr" hint="לפחות 10 תווים, אותיות וספרות. יוחלף בכניסה הראשונה." />
                 <Select name="role" label="הרשאה" defaultValue="EDITOR" options={[
                   { value: "EDITOR", label: "עורך תוכן - באנרים, מאמרים ועמודים" },
                   { value: "MANAGER", label: "מנהל - גם מוצרים, הזמנות והגדרות" },
