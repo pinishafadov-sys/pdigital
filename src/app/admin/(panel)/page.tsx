@@ -3,6 +3,7 @@ import { requireAdmin } from "@/lib/auth/session";
 import { db } from "@/lib/db";
 import { formatDateTime, formatPrice } from "@/lib/format";
 import { ORDER_STATUS } from "@/lib/order-status";
+import { fmtDays, reorderReport } from "@/lib/reorder";
 import { getSettings } from "@/lib/settings";
 import { AdminTop } from "./AdminTop";
 
@@ -28,7 +29,7 @@ export default async function Dashboard({ searchParams }: { searchParams: Promis
   const since = sevenDaysAgo();
   const paid = { in: ["PAID", "PROCESSING", "SHIPPED", "DELIVERED"] as ("PAID" | "PROCESSING" | "SHIPPED" | "DELIVERED")[] };
 
-  const [revenue, orderCount, productCount, recent, lowStock, s, lastLogins] = await Promise.all([
+  const [revenue, orderCount, productCount, recent, lowStock, s, lastLogins, reorder] = await Promise.all([
     db.order.aggregate({ _sum: { total: true }, where: { createdAt: { gte: since }, status: paid } }),
     db.order.count({ where: { createdAt: { gte: since }, status: paid } }),
     db.product.count({ where: { status: "ACTIVE" } }),
@@ -41,7 +42,9 @@ export default async function Dashboard({ searchParams }: { searchParams: Promis
     }),
     getSettings(),
     db.auditLog.findMany({ where: { action: { in: ["login", "login_failed"] } }, orderBy: { createdAt: "desc" }, take: 5, include: { user: { select: { displayName: true } } } }),
+    reorderReport(),
   ]);
+  const urgent = reorder.toOrder.slice(0, 6);
   const analyticsOn = !!s.seo.gaId;
 
   return (
@@ -95,6 +98,23 @@ export default async function Dashboard({ searchParams }: { searchParams: Promis
           </section>
 
           <section className="card" aria-labelledby="low-stock">
+            <h2 id="reorder-title">כדאי להזמין</h2>
+            {urgent.length ? (
+              <ul style={{ listStyle: "none", margin: "0 0 8px", padding: 0 }}>
+                {urgent.map((r) => (
+                  <li key={r.variantId} style={{ display: "flex", justifyContent: "space-between", gap: 8, padding: "8px 0", borderBottom: "1px solid var(--line-soft)" }}>
+                    <span>{r.title}</span>
+                    <span className={`pill ${r.status === "urgent" ? "pink" : "orange"}`}>
+                      {r.daysLeft != null && r.daysLeft < 1 ? "אוזל היום" : `עוד ${fmtDays(r.daysLeft)}`} · להזמין {r.suggestQty}
+                    </span>
+                  </li>
+                ))}
+              </ul>
+            ) : (
+              <p className="muted">אין כרגע מוצרים שצריך להזמין.</p>
+            )}
+            <Link href="/admin/reorder" style={{ color: "var(--brand-purple)" }}>כל ההמלצות להזמנה ←</Link>
+            <hr style={{ border: 0, borderTop: "1px solid var(--line)", margin: "16px 0" }} />
             <h2 id="low-stock">מלאי נמוך</h2>
             {lowStock.length ? (
               <ul style={{ listStyle: "none", margin: 0, padding: 0 }}>

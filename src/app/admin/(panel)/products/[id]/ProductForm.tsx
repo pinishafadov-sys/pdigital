@@ -10,7 +10,7 @@ type Props = {
   product: {
     id: string; name: string; slug: string; shortDescription: string | null; description: string | null;
     status: string; tags: string[]; categoryId: string; brandId: string | null; productTypeId: string | null;
-    warrantyMonths: number | null; isWeeklyDeal: boolean; seoTitle: string | null; seoDescription: string | null;
+    warrantyMonths: number | null; isWeeklyDeal: boolean; noReorder: boolean; seoTitle: string | null; seoDescription: string | null;
     variants: VariantRow[]; images: { url: string; alt: string }[]; specs: Record<string, string>; accessories: string[];
   } | null;
   categories: Opt[];
@@ -115,6 +115,7 @@ export function ProductForm({ product: p, categories, brands, types, accessoryOp
                 <label key={v} className="check"><input type="checkbox" name="tags" value={v} defaultChecked={p?.tags.includes(v)} />{l}</label>
               ))}
               <label className="check"><input type="checkbox" name="isWeeklyDeal" defaultChecked={p?.isWeeklyDeal} />להציג ב&quot;מבצעי השבוע&quot;</label>
+              <label className="check"><input type="checkbox" name="noReorder" defaultChecked={p?.noReorder} />לא להזמין מחדש (בלי התראות)</label>
             </div>
           </fieldset>
           <label className="field span-all">

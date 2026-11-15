@@ -4,7 +4,7 @@ import { formatDateTime, formatPrice, isPlaceholder } from "@/lib/format";
 import { defaultReportDate, endOfDayIsrael, inventoryAt } from "@/lib/inventory-report";
 import { getSettings } from "@/lib/settings";
 import { AdminTop } from "../../AdminTop";
-import { PrintButtons } from "./PrintButtons";
+import { PrintButtons } from "../../PrintButtons";
 
 export const metadata = { title: "דוח מלאי" };
 

@@ -127,6 +127,7 @@ model Brand {
   logoUrl          String?
   showInBrandStrip Boolean   @default(false)
   sortOrder        Int       @default(0)
+  leadTimeDays     Int? // days from ordering to stock in store; overrides the default for reorder alerts
   products         Product[]
 }
 
@@ -191,6 +192,7 @@ model Product {
   productType      ProductType?       @relation(fields: [productTypeId], references: [id])
   warrantyMonths   Int?
   isWeeklyDeal     Boolean            @default(false) // "מבצעי השבוע"
+  noReorder        Boolean            @default(false) // exclude from reorder alerts (seasonal / discontinued)
   seoTitle         String?
   seoDescription   String?
   images           ProductImage[]

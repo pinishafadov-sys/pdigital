@@ -19,6 +19,8 @@ export async function saveSettings(_p: ActionState, fd: FormData): Promise<Actio
       if (f.type === "url" && raw && !/^https?:\/\//.test(raw)) throw new FormError(`"${f.label}" חייב להתחיל ב-https://`);
       if (f.key === "vatRate" && raw && !(/^\d{1,2}(\.\d{1,2})?$/.test(raw) && Number(raw) <= 50))
         throw new FormError("שיעור מע\"מ לא תקין (למשל 18)");
+      if (["leadTimeDays", "coverDays", "salesWindowDays"].includes(f.key) && raw && !(/^\d{1,3}$/.test(raw) && Number(raw) >= 1 && Number(raw) <= 365))
+        throw new FormError(`"${f.label}" צריך להיות מספר ימים בין 1 ל-365`);
       if (f.key === "gaId" && raw && !/^G-[A-Z0-9]+$/.test(raw)) throw new FormError("מזהה Google Analytics צריך להיראות כך: G-XXXXXXX");
       if (f.key === "gtmId" && raw && !/^GTM-[A-Z0-9]+$/.test(raw)) throw new FormError("מזהה Tag Manager צריך להיראות כך: GTM-XXXXXX");
       if (f.key === "facebookPixel" && raw && !/^\d+$/.test(raw)) throw new FormError("Facebook Pixel ID מכיל ספרות בלבד");

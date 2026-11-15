@@ -78,6 +78,7 @@ export default async function EditProductPage({ params, searchParams }: { params
               productTypeId: product.productTypeId,
               warrantyMonths: product.warrantyMonths,
               isWeeklyDeal: product.isWeeklyDeal,
+              noReorder: product.noReorder,
               seoTitle: product.seoTitle,
               seoDescription: product.seoDescription,
               variants: product.variants.map((v) => ({

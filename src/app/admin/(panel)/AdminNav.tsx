@@ -8,6 +8,7 @@ const NAV = [
   { href: "/admin/orders", label: "הזמנות", dot: "var(--brand-blue-on-dark)" },
   { href: "/admin/products", label: "מוצרים", dot: "var(--brand-pink-on-dark)" },
   { href: "/admin/stock", label: "מלאי", dot: "var(--brand-orange)" },
+  { href: "/admin/reorder", label: "המלצות להזמנה", dot: "var(--brand-pink-on-dark)" },
   { href: "/admin/reports/stock", label: "דוח מלאי שנתי", dot: "var(--brand-purple-light-on-dark)" },
   { href: "/admin/categories", label: "קטגוריות", dot: "var(--brand-purple-light-on-dark)" },
   { href: "/admin/brands", label: "מותגים", dot: "var(--brand-orange)" },

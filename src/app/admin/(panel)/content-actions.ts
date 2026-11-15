@@ -8,7 +8,7 @@ import { redirect } from "next/navigation";
 import { audit, requireAdmin } from "@/lib/auth/session";
 import { db } from "@/lib/db";
 import {
-  bool, date, FormError, handle, int, oneOf, optStr, safeUrl, slugFrom, str, type ActionState,
+  bool, date, FormError, handle, int, oneOf, optInt, optStr, safeUrl, slugFrom, str, type ActionState,
 } from "@/lib/form";
 import { saveImage } from "@/lib/upload";
 
@@ -66,6 +66,7 @@ export async function saveBrand(_p: ActionState, fd: FormData): Promise<ActionSt
       slug: slugFrom(fd, "slug", name),
       showInBrandStrip: bool(fd, "showInBrandStrip"),
       sortOrder: int(fd, "sortOrder", { min: -999, max: 9999 }),
+      leadTimeDays: optInt(fd, "leadTimeDays", { min: 1, max: 365 }),
       ...(logo ? { logoUrl: logo } : {}),
     };
     const row = id(fd) ? await db.brand.update({ where: { id: id(fd) }, data }) : await db.brand.create({ data });

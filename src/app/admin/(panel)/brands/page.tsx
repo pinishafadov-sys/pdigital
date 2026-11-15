@@ -45,6 +45,8 @@ export default async function BrandsPage({ searchParams }: { searchParams: Promi
               <Text name="name" label="שם המותג" defaultValue={edit?.name} required />
               <Text name="slug" label="כתובת (slug)" defaultValue={edit?.slug} hint="ריק = נוצר מהשם" />
               <Text name="sortOrder" label="סדר" type="number" defaultValue={edit?.sortOrder ?? 0} />
+              <Text name="leadTimeDays" label="זמן אספקה מהספק (ימים)" type="number" defaultValue={edit?.leadTimeDays ?? ""}
+                hint="ריק = ברירת המחדל מההגדרות. משמש להתראות להזמנה" />
               <ImageInput name="logo" label="לוגו" current={edit?.logoUrl} />
               <Check name="showInBrandStrip" label="להציג בפס המותגים בדף הבית" defaultChecked={edit?.showInBrandStrip} />
             </ActionForm>

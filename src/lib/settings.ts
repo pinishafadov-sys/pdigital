@@ -42,6 +42,15 @@ export const SETTING_GROUPS = {
       { key: "returnsText", label: "החזרות - בשפה פשוטה", type: "textarea", placeholder: "[מדיניות החזרה בשפה פשוטה]" },
     ],
   },
+  inventory: {
+    title: "מלאי והתראות להזמנה",
+    fields: [
+      { key: "leadTimeDays", label: "זמן אספקה מהספק (ימים)", type: "number",
+        hint: "כמה ימים עוברים מההזמנה מהספק עד שהסחורה בחנות. אפשר להגדיר זמן שונה לכל מותג", placeholder: "14" },
+      { key: "coverDays", label: "להזמין מלאי שיספיק ל- (ימים)", type: "number", placeholder: "45" },
+      { key: "salesWindowDays", label: "לחשב מהירות מכירה לפי (ימים אחרונים)", type: "number", placeholder: "30" },
+    ],
+  },
   home: {
     title: "טקסטים בדף הבית",
     fields: [
