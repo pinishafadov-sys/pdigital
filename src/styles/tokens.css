@@ -1,0 +1,87 @@
+/*
+ * pdigital design tokens - the ONLY place colors, fonts and radii are defined.
+ * Components must use these variables, never raw hex values.
+ */
+:root {
+  /* Brand */
+  --brand-blue: #2f80c8;
+  --brand-pink: #e91e78;
+  --brand-purple: #5b2a7e;
+  --brand-orange: #f7901e;
+
+  /* Brand on dark backgrounds */
+  --brand-blue-on-dark: #4c9be0;
+  --brand-pink-on-dark: #f0348a;
+  --brand-purple-on-dark: #8e55c2;
+  --brand-purple-light-on-dark: #b07ce0;
+  --brand-orange-on-dark: #f7901e;
+
+  /* Surfaces */
+  --bg-page: #f4f5f9;
+  --bg-surface: #ffffff;
+  --bg-dark: #15131f;
+  --bg-dark-purple: #2b1245;
+  --bg-purple-mid: #3f1b58;
+  --bg-orange-soft: #fff1de;
+  --bg-blue-soft: #e3f0fb;
+  --bg-pink-soft: #fce4ef;
+  --bg-purple-soft: #efe6f7;
+  --bg-purple-strip: #e9e1f4;
+  --bg-green-soft: #e4f4ea;
+
+  /* Lines */
+  --line: #e3e5ee;
+  --line-strong: #d5d8e6;
+  --line-soft: #eef0f6;
+  --line-orange: #f0dcc0;
+  --line-blue: #c8def2;
+  --line-dark: #2e2a4d;
+
+  /* Text */
+  --text-primary: #1b1a2e;
+  --text-muted: #5b5e78;
+  --text-body: #3a3c55;
+  --text-on-dark: #ffffff;
+  --text-on-dark-muted: #b7b3d1;
+  --text-on-purple: #e6daf2;
+  --text-ink: #0f0d1a;
+  --text-orange-ink: #b45f00;
+  --text-blue-ink: #1f5f9e;
+  --text-pink-ink: #8a0f45;
+  --text-purple-ink: #3f1b58;
+  --text-success: #1b6b3a;
+  --text-danger: #b3261e;
+
+  /* Actions & prices */
+  --action-primary: var(--brand-orange);
+  --action-primary-text: #15131f;
+  --price-sale: #c2185b;
+  --badge-discount: #c62828;
+  --whatsapp: #2e9e5b;
+
+  /* Fonts (loaded in src/app/layout.tsx) */
+  --font-body: var(--font-rubik), system-ui, sans-serif;
+  --font-logo: var(--font-poppins), sans-serif;
+  --font-slogan: var(--font-secular-one), var(--font-rubik), sans-serif;
+
+  /* Shape */
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 16px;
+  --radius-xl: 20px;
+  --radius-full: 999px;
+  --shadow-card: 0 1px 2px rgb(21 19 31 / 0.04), 0 8px 24px rgb(21 19 31 / 0.06);
+  --shadow-lift: 0 12px 32px rgb(91 42 126 / 0.16);
+
+  --container: 1280px;
+  --gutter: 16px;
+
+  /* Focus ring - visible keyboard focus (accessibility) */
+  --focus-ring: 0 0 0 3px var(--bg-surface), 0 0 0 6px var(--brand-blue);
+}
+
+@media (min-width: 768px) {
+  :root {
+    --gutter: 24px;
+  }
+}

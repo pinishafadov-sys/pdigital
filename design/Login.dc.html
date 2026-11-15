@@ -1,0 +1,71 @@
+<!doctype html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="utf-8">
+<title>כניסה למערכת הניהול - pdigital</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Rubik:wght@400;500;600;700&family=Poppins:wght@600&display=swap">
+<style>
+body{margin:0}
+a{text-decoration:none}
+</style>
+</helmet>
+<div dir="rtl" style="background: #2B1245; color: #1B1A2E; font-family: 'Rubik', system-ui, sans-serif; line-height: 1.5; min-height: 860px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 24px; padding: 40px 24px; box-sizing: border-box">
+
+<div dir="ltr" style="display: flex; align-items: center; gap: 10px; background: #3F1B58; color: #E6DAF2; font-size: 15px; padding: 10px 20px; border-radius: 999px">
+<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#E6DAF2" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg>
+<span>https://admin.[הדומיין-שלך]</span>
+</div>
+
+<main style="width: 100%; max-width: 440px; background: #FFFFFF; border-radius: 20px; padding: 40px; box-sizing: border-box; display: flex; flex-direction: column; gap: 24px">
+<div style="display: flex; flex-direction: column; align-items: center; gap: 10px">
+<div style="display: flex; align-items: center; gap: 10px">
+<svg width="44" height="48" viewBox="-2 -2 58 64" aria-hidden="true">
+<polygon points="0,0 27,15 18,30" fill="#2F80C8" stroke="#2F80C8" stroke-width="3" stroke-linejoin="round"/>
+<polygon points="0,0 18,30 0,60" fill="#E91E78" stroke="#E91E78" stroke-width="3" stroke-linejoin="round"/>
+<polygon points="18,30 27,45 0,60" fill="#5B2A7E" stroke="#5B2A7E" stroke-width="3" stroke-linejoin="round"/>
+<polygon points="27,15 54,30 27,45 18,30" fill="#F7901E" stroke="#F7901E" stroke-width="3" stroke-linejoin="round"/>
+</svg>
+<span dir="ltr" style="font-family: 'Poppins', sans-serif; font-weight: 600; font-size: 34px; line-height: 1"><span style="color: #5B2A7E">p</span><span style="color: #F7901E">digital</span></span>
+</div>
+<h1 style="margin: 8px 0 0; font-size: 26px; font-weight: 700">כניסה למערכת הניהול</h1>
+<p style="margin: 0; font-size: 15px; color: #5B5E78; text-align: center">גישה למורשים בלבד</p>
+</div>
+
+<form style="display: flex; flex-direction: column; gap: 18px">
+<label style="display: flex; flex-direction: column; gap: 6px; font-size: 15px; font-weight: 500">שם משתמש
+<input type="text" autocomplete="username" style="min-height: 48px; box-sizing: border-box; width: 100%; padding: 0 16px; font-family: inherit; font-size: 16px; color: #1B1A2E; background: #F4F5F9; border: 1px solid #D5D8E6; border-radius: 12px">
+</label>
+<label style="display: flex; flex-direction: column; gap: 6px; font-size: 15px; font-weight: 500">סיסמה
+<input type="password" autocomplete="current-password" style="min-height: 48px; box-sizing: border-box; width: 100%; padding: 0 16px; font-family: inherit; font-size: 16px; color: #1B1A2E; background: #F4F5F9; border: 1px solid #D5D8E6; border-radius: 12px">
+</label>
+<div style="display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 8px; font-size: 14px">
+<label style="display: flex; align-items: center; gap: 8px; cursor: pointer"><input type="checkbox" style="width: 18px; height: 18px; accent-color: #F7901E; margin: 0">זכור אותי במכשיר הזה</label>
+<a href="#" style="color: #5B2A7E; font-weight: 500">שכחתי סיסמה</a>
+</div>
+<a href="Admin.dc.html" style="min-height: 52px; display: flex; align-items: center; justify-content: center; font-size: 18px; font-weight: 700; color: #15131F; background: {{accent}}; border-radius: 12px">כניסה</a>
+</form>
+
+<div style="display: flex; align-items: center; justify-content: center; gap: 8px; font-size: 13px; color: #5B5E78; border-top: 1px solid #EEF0F6; padding-top: 16px">
+<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#5B5E78" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3l8 3v6c0 5-3.5 8-8 9-4.5-1-8-4-8-9V6z"/></svg>
+<span>החיבור מוצפן. ניסיונות כניסה נרשמים.</span>
+</div>
+</main>
+
+<a href="Main.dc.html" style="font-size: 14px; color: #E6DAF2">← חזרה לאתר</a>
+
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"accent":{"editor":"color","default":"#F7901E","options":["#F7901E","#F0348A","#4C9BE0","#B07CE0"]},"$preview":{"width":1440,"height":860}}'>
+class Component extends DCLogic {
+renderVals() {
+return { accent: this.props.accent ?? '#F7901E' };
+}
+}
+</script>
+</body>
+</html>
