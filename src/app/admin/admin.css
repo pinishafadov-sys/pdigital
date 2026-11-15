@@ -517,7 +517,7 @@
 
 @media (min-width: 800px) {
   .row-item.variant {
-    grid-template-columns: 2fr 1.3fr 1fr 1fr 1fr 0.8fr auto;
+    grid-template-columns: 1.6fr 1.1fr 1.8fr 1fr 1.8fr 0.7fr auto;
   }
 
   .row-item.image {
@@ -531,6 +531,39 @@
 
 .row-item .field input,
 .row-item .field select {
+  background: var(--bg-surface);
+  min-height: 42px;
+}
+
+.vat-pair {
+  border: 0;
+  margin: 0;
+  padding: 0;
+  min-width: 0;
+}
+
+.vat-pair legend {
+  padding: 0;
+  margin-bottom: 6px;
+}
+
+.vat-pair {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 6px;
+}
+
+.vat-pair label {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  font-size: 0.75rem;
+  font-weight: 400;
+  color: var(--text-muted);
+  min-width: 0;
+}
+
+.vat-pair input {
   background: var(--bg-surface);
   min-height: 42px;
 }

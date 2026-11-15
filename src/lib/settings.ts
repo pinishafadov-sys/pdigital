@@ -18,6 +18,7 @@ export const SETTING_GROUPS = {
     fields: [
       { key: "name", label: "שם העסק", placeholder: "pdigital" },
       { key: "legalName", label: "שם רשמי / ח.פ", placeholder: "[שם רשמי וח.פ]" },
+      { key: "vatRate", label: "שיעור מע\"מ (%)", type: "number", hint: "משמש לחישוב מחיר עם ובלי מע\"מ בעריכת מוצר", placeholder: "18" },
       { key: "phone", label: "טלפון", type: "tel", placeholder: "[טלפון]" },
       { key: "whatsapp", label: "וואטסאפ (מספר בינלאומי, למשל 972501234567)", type: "tel", placeholder: "[וואטסאפ]" },
       { key: "email", label: "אימייל", type: "email", placeholder: "[אימייל]" },
@@ -97,6 +98,12 @@ export const getSettings = cache(async (): Promise<Settings> => {
 export async function getStoredGroup(group: SettingGroup) {
   const row = await db.siteSetting.findUnique({ where: { key: group } });
   return (row?.value as Record<string, string> | undefined) ?? {};
+}
+
+/** VAT rate as a percentage number (e.g. 18), from settings, with a safe fallback. */
+export async function getVatRate() {
+  const n = Number((await getSettings()).business.vatRate);
+  return Number.isFinite(n) && n >= 0 && n <= 50 ? n : 18;
 }
 
 export function siteUrl() {

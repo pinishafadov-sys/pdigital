@@ -17,6 +17,8 @@ export async function saveSettings(_p: ActionState, fd: FormData): Promise<Actio
     for (const f of def.fields as SettingField[]) {
       const raw = String(fd.get(f.key) ?? "").trim().slice(0, f.type === "textarea" ? 2000 : 300);
       if (f.type === "url" && raw && !/^https?:\/\//.test(raw)) throw new FormError(`"${f.label}" חייב להתחיל ב-https://`);
+      if (f.key === "vatRate" && raw && !(/^\d{1,2}(\.\d{1,2})?$/.test(raw) && Number(raw) <= 50))
+        throw new FormError("שיעור מע\"מ לא תקין (למשל 18)");
       if (f.key === "gaId" && raw && !/^G-[A-Z0-9]+$/.test(raw)) throw new FormError("מזהה Google Analytics צריך להיראות כך: G-XXXXXXX");
       if (f.key === "gtmId" && raw && !/^GTM-[A-Z0-9]+$/.test(raw)) throw new FormError("מזהה Tag Manager צריך להיראות כך: GTM-XXXXXX");
       if (f.key === "facebookPixel" && raw && !/^\d+$/.test(raw)) throw new FormError("Facebook Pixel ID מכיל ספרות בלבד");

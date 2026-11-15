@@ -17,13 +17,45 @@ type Props = {
   brands: Opt[];
   types: { id: string; name: string; fields: { id: string; label: string; unit: string | null }[] }[];
   accessoryOptions: { id: string; name: string }[];
+  vatRate: number;
 };
+
+/** Two linked inputs: before VAT and with VAT. Typing in either fills the other. */
+function VatPair({ label, name, stored, initial, vat }: { label: string; name: string; stored: "incl" | "ex"; initial: string; vat: number }) {
+  const f = 1 + vat / 100;
+  const fmt = (n: number) => (Number.isFinite(n) ? (Math.round(n * 100) / 100).toFixed(2).replace(/\.00$/, "") : "");
+  const parse = (s: string) => Number(s.replace(/[₪,\s]/g, ""));
+  const init = initial ? parse(initial) : NaN;
+  const [incl, setIncl] = useState(initial ? (stored === "incl" ? initial : fmt(init * f)) : "");
+  const [ex, setEx] = useState(initial ? (stored === "ex" ? initial : fmt(init / f)) : "");
+  const onIncl = (s: string) => {
+    setIncl(s);
+    setEx(s.trim() && Number.isFinite(parse(s)) ? fmt(parse(s) / f) : "");
+  };
+  const onEx = (s: string) => {
+    setEx(s);
+    setIncl(s.trim() && Number.isFinite(parse(s)) ? fmt(parse(s) * f) : "");
+  };
+  return (
+    <fieldset className="field vat-pair">
+      <legend>{label}</legend>
+      <label>
+        <span>לפני מע&quot;מ</span>
+        <input value={ex} onChange={(e) => onEx(e.target.value)} name={stored === "ex" ? name : undefined} inputMode="decimal" dir="ltr" />
+      </label>
+      <label>
+        <span>כולל מע&quot;מ ({vat}%)</span>
+        <input value={incl} onChange={(e) => onIncl(e.target.value)} name={stored === "incl" ? name : undefined} inputMode="decimal" dir="ltr" />
+      </label>
+    </fieldset>
+  );
+}
 
 const emptyVariant = (): VariantRow => ({ id: "", name: "", sku: "", price: "", compare: "", cost: "", stock: "0" });
 let key = 0;
 const withKey = <T,>(x: T) => ({ ...x, _k: ++key });
 
-export function ProductForm({ product: p, categories, brands, types, accessoryOptions }: Props) {
+export function ProductForm({ product: p, categories, brands, types, accessoryOptions, vatRate }: Props) {
   const [variants, setVariants] = useState(() => (p?.variants.length ? p.variants : [emptyVariant()]).map(withKey));
   const [images, setImages] = useState(() => (p?.images ?? []).map(withKey));
   const [typeId, setTypeId] = useState(p?.productTypeId ?? "");
@@ -100,7 +132,8 @@ export function ProductForm({ product: p, categories, brands, types, accessoryOp
       <section className="card form-section" aria-labelledby="sec-var">
         <h2 id="sec-var">מחיר, מלאי ווריאנטים</h2>
         <p className="muted" style={{ margin: 0 }}>
-          מוצר רגיל = שורה אחת. מוצר עם צבעים / נפחים = שורה לכל אפשרות. מחיר העלות לא מוצג ללקוחות, ומשמש לדוח המלאי השנתי.
+          מוצר רגיל = שורה אחת. מוצר עם צבעים / נפחים = שורה לכל אפשרות. במחיר המכירה ובמחיר העלות אפשר למלא לפני מע&quot;מ או כולל מע&quot;מ,
+          והשני מחושב אוטומטית. באתר מוצג המחיר כולל מע&quot;מ. מחיר העלות לא מוצג ללקוחות, ונשמר לפני מע&quot;מ לדוח המלאי.
         </p>
         <div className="rows">
           {variants.map((v, i) => (
@@ -108,9 +141,9 @@ export function ProductForm({ product: p, categories, brands, types, accessoryOp
               <input type="hidden" name="v_id" value={v.id} />
               <label className="field"><span>שם וריאנט (למשל: שחור 128GB)</span><input name="v_name" defaultValue={v.name} maxLength={120} /></label>
               <label className="field"><span>מק&quot;ט *</span><input name="v_sku" defaultValue={v.sku} dir="ltr" maxLength={60} /></label>
-              <label className="field"><span>מחיר ₪ *</span><input name="v_price" defaultValue={v.price} inputMode="decimal" dir="ltr" /></label>
-              <label className="field"><span>מחיר לפני הנחה ₪</span><input name="v_compare" defaultValue={v.compare} inputMode="decimal" dir="ltr" /></label>
-              <label className="field"><span>מחיר עלות ₪</span><input name="v_cost" defaultValue={v.cost} inputMode="decimal" dir="ltr" title="כמה שילמת ליחידה. לא מוצג ללקוחות" /></label>
+              <VatPair label="מחיר מכירה ₪ *" name="v_price" stored="incl" initial={v.price} vat={vatRate} />
+              <label className="field"><span>מחיר לפני הנחה ₪ (כולל מע&quot;מ)</span><input name="v_compare" defaultValue={v.compare} inputMode="decimal" dir="ltr" /></label>
+              <VatPair label="מחיר עלות ₪" name="v_cost" stored="ex" initial={v.cost} vat={vatRate} />
               <label className="field"><span>מלאי</span><input name="v_stock" type="number" min={0} defaultValue={v.stock} /></label>
               <button type="button" className="icon-btn" aria-label={`הסרת וריאנט ${i + 1}`} disabled={variants.length === 1}
                 onClick={() => setVariants((arr) => arr.filter((x) => x._k !== v._k))}>✕</button>

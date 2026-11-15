@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import { requireAdmin } from "@/lib/auth/session";
 import { db } from "@/lib/db";
 import { formatDateTime, priceInput } from "@/lib/format";
+import { getVatRate } from "@/lib/settings";
 import { STOCK_REASON_LABEL } from "@/lib/stock";
 import { AdminTop } from "../../AdminTop";
 import { ConfirmButton } from "../../ui";
@@ -35,6 +36,7 @@ export default async function EditProductPage({ params, searchParams }: { params
     db.product.findMany({ where: { category: { isAccessories: true }, ...(isNew ? {} : { id: { not: id } }) }, select: { id: true, name: true }, orderBy: { name: "asc" }, take: 300 }),
   ]);
   if (!isNew && !product) notFound();
+  const vatRate = await getVatRate();
   const history = isNew
     ? []
     : await db.stockMovement.findMany({
@@ -90,6 +92,7 @@ export default async function EditProductPage({ params, searchParams }: { params
           brands={brands.map((b) => ({ value: b.id, label: b.name }))}
           types={types.map((t) => ({ id: t.id, name: t.name, fields: t.specFields.map((f) => ({ id: f.id, label: f.label, unit: f.unit })) }))}
           accessoryOptions={accessoryOptions}
+          vatRate={vatRate}
         />
         {!isNew && history.length > 0 && (
           <section className="card table-wrap" aria-labelledby="stock-hist">

@@ -45,7 +45,7 @@ export default async function StockReportPage({ searchParams }: { searchParams: 
           <div className="card kpi"><span className="label">תאריך</span><span className="value" style={{ fontSize: 22 }}>{`${d}.${m}.${y}`}</span></div>
           <div className="card kpi"><span className="label">פריטים שונים</span><span className="value">{rows.length}</span></div>
           <div className="card kpi"><span className="label">סך יחידות</span><span className="value">{totalQty}</span></div>
-          <div className="card kpi"><span className="label">שווי מלאי (עלות)</span><span className="value">₪{formatPrice(totalValue)}</span></div>
+          <div className="card kpi"><span className="label">שווי מלאי (עלות, לפני מע&quot;מ)</span><span className="value">₪{formatPrice(totalValue)}</span></div>
         </section>
 
         {missingCost > 0 && (
@@ -61,7 +61,7 @@ export default async function StockReportPage({ searchParams }: { searchParams: 
           {rows.length ? (
             <table className="table">
               <thead>
-                <tr><th>מק&quot;ט</th><th>מוצר</th><th>קטגוריה</th><th>כמות</th><th>עלות ליחידה</th><th>שווי</th></tr>
+                <tr><th>מק&quot;ט</th><th>מוצר</th><th>קטגוריה</th><th>כמות</th><th>עלות ליחידה (לפני מע&quot;מ)</th><th>שווי</th></tr>
               </thead>
               <tbody>
                 {rows.map((r) => (
