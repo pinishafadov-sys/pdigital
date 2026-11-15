@@ -88,6 +88,15 @@
   border-radius: var(--radius-md);
 }
 
+.field input[type="checkbox"],
+.field input[type="radio"] {
+  width: 18px;
+  height: 18px;
+  min-height: 0;
+  padding: 0;
+  flex: none;
+}
+
 .field textarea {
   padding: 12px 14px;
   min-height: 120px;
