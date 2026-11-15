@@ -79,7 +79,7 @@ export default async function EditProductPage({ params, searchParams }: { params
               seoTitle: product.seoTitle,
               seoDescription: product.seoDescription,
               variants: product.variants.map((v) => ({
-                id: v.id, name: v.name ?? "", sku: v.sku, price: priceInput(v.price), compare: priceInput(v.compareAtPrice), stock: String(v.stock),
+                id: v.id, name: v.name ?? "", sku: v.sku, price: priceInput(v.price), compare: priceInput(v.compareAtPrice), cost: priceInput(v.costPrice), stock: String(v.stock),
               })),
               images: product.images.map((i) => ({ url: i.url, alt: i.alt })),
               specs: Object.fromEntries(product.specValues.map((s) => [s.specFieldId, s.value])),

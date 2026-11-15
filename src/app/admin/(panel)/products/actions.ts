@@ -29,6 +29,7 @@ export async function saveProduct(_prev: ActionState, fd: FormData): Promise<Act
     const vPrices = all(fd, "v_price");
     const vCompare = all(fd, "v_compare");
     const vStock = all(fd, "v_stock");
+    const vCost = all(fd, "v_cost");
     const variants = vSkus
       .map((sku, i) => {
         if (!sku && !vPrices[i]) return null;
@@ -36,11 +37,13 @@ export async function saveProduct(_prev: ActionState, fd: FormData): Promise<Act
         const one = new FormData();
         one.set("p", vPrices[i] ?? "");
         one.set("c", vCompare[i] ?? "");
+        one.set("k", vCost[i] ?? "");
         const price = shekels(one, "p", true)!;
         const compareAtPrice = shekels(one, "c");
+        const costPrice = shekels(one, "k");
         const stock = Number(vStock[i] || 0);
         if (!Number.isInteger(stock) || stock < 0 || stock > 1_000_000) throw new FormError(`מלאי לא תקין בשורה ${i + 1}`);
-        return { id: vIds[i] || null, name: vNames[i]?.slice(0, 120) || null, sku: sku.slice(0, 60), price, compareAtPrice, stock, sortOrder: i };
+        return { id: vIds[i] || null, name: vNames[i]?.slice(0, 120) || null, sku: sku.slice(0, 60), price, compareAtPrice, costPrice, stock, sortOrder: i };
       })
       .filter((v): v is NonNullable<typeof v> => v !== null);
     if (!variants.length) throw new FormError("יש להזין לפחות מחיר ומק\"ט אחד");

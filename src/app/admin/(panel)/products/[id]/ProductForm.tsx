@@ -5,7 +5,7 @@ import { saveProduct } from "../actions";
 import { ActionForm } from "../../ui";
 
 type Opt = { value: string; label: string };
-type VariantRow = { id: string; name: string; sku: string; price: string; compare: string; stock: string };
+type VariantRow = { id: string; name: string; sku: string; price: string; compare: string; cost: string; stock: string };
 type Props = {
   product: {
     id: string; name: string; slug: string; shortDescription: string | null; description: string | null;
@@ -19,7 +19,7 @@ type Props = {
   accessoryOptions: { id: string; name: string }[];
 };
 
-const emptyVariant = (): VariantRow => ({ id: "", name: "", sku: "", price: "", compare: "", stock: "0" });
+const emptyVariant = (): VariantRow => ({ id: "", name: "", sku: "", price: "", compare: "", cost: "", stock: "0" });
 let key = 0;
 const withKey = <T,>(x: T) => ({ ...x, _k: ++key });
 
@@ -99,7 +99,9 @@ export function ProductForm({ product: p, categories, brands, types, accessoryOp
 
       <section className="card form-section" aria-labelledby="sec-var">
         <h2 id="sec-var">מחיר, מלאי ווריאנטים</h2>
-        <p className="muted" style={{ margin: 0 }}>מוצר רגיל = שורה אחת. מוצר עם צבעים / נפחים = שורה לכל אפשרות.</p>
+        <p className="muted" style={{ margin: 0 }}>
+          מוצר רגיל = שורה אחת. מוצר עם צבעים / נפחים = שורה לכל אפשרות. מחיר העלות לא מוצג ללקוחות, ומשמש לדוח המלאי השנתי.
+        </p>
         <div className="rows">
           {variants.map((v, i) => (
             <div key={v._k} className="row-item variant">
@@ -108,6 +110,7 @@ export function ProductForm({ product: p, categories, brands, types, accessoryOp
               <label className="field"><span>מק&quot;ט *</span><input name="v_sku" defaultValue={v.sku} dir="ltr" maxLength={60} /></label>
               <label className="field"><span>מחיר ₪ *</span><input name="v_price" defaultValue={v.price} inputMode="decimal" dir="ltr" /></label>
               <label className="field"><span>מחיר לפני הנחה ₪</span><input name="v_compare" defaultValue={v.compare} inputMode="decimal" dir="ltr" /></label>
+              <label className="field"><span>מחיר עלות ₪</span><input name="v_cost" defaultValue={v.cost} inputMode="decimal" dir="ltr" title="כמה שילמת ליחידה. לא מוצג ללקוחות" /></label>
               <label className="field"><span>מלאי</span><input name="v_stock" type="number" min={0} defaultValue={v.stock} /></label>
               <button type="button" className="icon-btn" aria-label={`הסרת וריאנט ${i + 1}`} disabled={variants.length === 1}
                 onClick={() => setVariants((arr) => arr.filter((x) => x._k !== v._k))}>✕</button>

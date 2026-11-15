@@ -226,6 +226,7 @@ model ProductVariant {
   options           Json? // e.g. {"צבע": "שחור", "נפח": "128GB"}
   price             Int // agorot
   compareAtPrice    Int? // original price when on sale, agorot
+  costPrice         Int? // purchase cost per unit, agorot - admin only, for inventory valuation
   stock             Int         @default(0)
   lowStockThreshold Int         @default(3)
   isActive          Boolean     @default(true)

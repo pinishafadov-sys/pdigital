@@ -517,7 +517,7 @@
 
 @media (min-width: 800px) {
   .row-item.variant {
-    grid-template-columns: 2fr 1.4fr 1fr 1fr 0.8fr auto;
+    grid-template-columns: 2fr 1.3fr 1fr 1fr 1fr 0.8fr auto;
   }
 
   .row-item.image {
