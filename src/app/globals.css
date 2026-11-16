@@ -1885,6 +1885,145 @@ input[type="checkbox"] {
   font-size: 0.9375rem;
 }
 
+/* ------------------------------------------------------------------ checkout */
+.checkout-layout {
+  display: grid;
+  gap: 20px;
+  align-items: start;
+}
+
+@media (min-width: 960px) {
+  .checkout-layout {
+    grid-template-columns: 1fr 360px;
+  }
+
+  .checkout-summary {
+    position: sticky;
+    top: 16px;
+  }
+}
+
+.checkout-main {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.checkout-card,
+.checkout-summary {
+  padding: 20px;
+}
+
+.checkout-card h2,
+.checkout-summary h2 {
+  margin: 0 0 12px;
+  font-size: 1.25rem;
+}
+
+.checkout-grid {
+  display: grid;
+  gap: 12px;
+}
+
+@media (min-width: 600px) {
+  .checkout-grid {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+.checkout-field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  font-weight: 500;
+}
+
+.checkout-field textarea.input {
+  padding: 10px 12px;
+}
+
+.ship-options {
+  display: grid;
+  gap: 10px;
+}
+
+.ship-option {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  border: 2px solid var(--line-strong);
+  border-radius: var(--radius-md);
+  padding: 14px;
+  cursor: pointer;
+}
+
+.ship-option.on {
+  border-color: var(--brand-orange);
+  background: var(--bg-orange-soft);
+}
+
+.ship-option > span {
+  display: flex;
+  flex-direction: column;
+}
+
+.ship-option input {
+  accent-color: var(--brand-orange);
+  width: 18px;
+  height: 18px;
+}
+
+.check-line {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  margin-top: 10px;
+  cursor: pointer;
+}
+
+.check-line input {
+  margin-top: 3px;
+  flex: none;
+}
+
+.check-line a {
+  color: var(--brand-purple);
+  text-decoration: underline;
+}
+
+.checkout-summary {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.sum-lines {
+  list-style: none;
+  margin: 0 0 6px;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  font-size: 0.9375rem;
+}
+
+.sum-lines li,
+.sum-row {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.sum-row {
+  border-top: 1px solid var(--line-soft);
+  padding-top: 8px;
+}
+
+.sum-row.total {
+  font-size: 1.25rem;
+  font-weight: 700;
+}
+
 /* ------------------------------------------------------------------ contact page */
 .contact-layout {
   display: grid;

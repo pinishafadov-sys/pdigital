@@ -49,6 +49,7 @@ export default async function OrderPage({ params }: { params: Promise<{ id: stri
               <a href={`mailto:${o.email}`}>{o.email}</a><br />
               {o.street} {o.houseNumber}{o.apartment ? `, דירה ${o.apartment}` : ""}, {o.city}<br />
               שיטת משלוח: {o.shippingMethod}<br />
+              {o.companyName && <>חשבונית על שם: <b>{o.companyName}</b> · ח.פ {o.companyTaxId}<br /></>}
               {o.deliveryNotes && <>הערות: {o.deliveryNotes}<br /></>}
               נוצרה: {formatDateTime(o.createdAt)}
               {o.paidAt && <><br />שולמה: {formatDateTime(o.paidAt)} ({o.paymentProvider})</>}
@@ -64,6 +65,11 @@ export default async function OrderPage({ params }: { params: Promise<{ id: stri
               <Text name="trackingNumber" label="מספר משלוח למעקב" defaultValue={o.trackingNumber} dir="ltr" />
             </div>
             <Area name="internalNotes" label="הערות פנימיות (לא נראות ללקוח)" defaultValue={o.internalNotes} rows={3} />
+            <p className="help" style={{ margin: 0 }}>
+              {o.stockDeducted
+                ? "המוצרים כבר ירדו מהמלאי. ביטול או החזרה יחזירו אותם למלאי אוטומטית."
+                : "המלאי יורד אוטומטית כשמסמנים את ההזמנה כ\"חדשה\" (שולמה) או מתקדמת יותר."}
+            </p>
           </ActionForm>
         </section>
       </main>

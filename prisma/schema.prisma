@@ -352,6 +352,10 @@ model Order {
   zipCode         String?
   deliveryNotes   String?
   shippingMethod  String
+  companyName     String? // invoice for a business
+  companyTaxId    String? // ח.פ / ע.מ
+  publicToken     String      @unique @default(cuid()) // for the customer's order confirmation link
+  stockDeducted   Boolean     @default(false) // stock is taken only once the order is paid
 
   subtotal        Int // agorot
   discountTotal   Int         @default(0)

@@ -37,6 +37,8 @@ export const SETTING_GROUPS = {
       { key: "barText", label: "טקסט הפס הכתום בראש האתר", type: "textarea",
         placeholder: "משלוח: בדרך כלל [N] ימי עסקים · התחייבות עד [N] ימי עסקים · משלוח חינם מעל [סכום] ₪" },
       { key: "freeShippingFrom", label: "משלוח חינם מעל (₪)", type: "number", placeholder: "[סכום]" },
+      { key: "shippingPrice", label: "מחיר משלוח עד הבית (₪)", type: "number", placeholder: "[מחיר משלוח]" },
+      { key: "pickupEnabled", label: "איסוף עצמי מהחנות (כן / לא)", placeholder: "כן" },
       { key: "deliveryTime", label: "זמן אספקה (לדף המוצר)", placeholder: "[זמן אספקה]" },
       { key: "warrantyText", label: "אחריות - בשפה פשוטה", type: "textarea", placeholder: "[תקופת אחריות ומי נותן אותה]" },
       { key: "returnsText", label: "החזרות - בשפה פשוטה", type: "textarea", placeholder: "[מדיניות החזרה בשפה פשוטה]" },

@@ -17,6 +17,9 @@ export async function saveSettings(_p: ActionState, fd: FormData): Promise<Actio
     for (const f of def.fields as SettingField[]) {
       const raw = String(fd.get(f.key) ?? "").trim().slice(0, f.type === "textarea" ? 2000 : 300);
       if (f.type === "url" && raw && !/^https?:\/\//.test(raw)) throw new FormError(`"${f.label}" חייב להתחיל ב-https://`);
+      if ((f.key === "shippingPrice" || f.key === "freeShippingFrom") && raw && !/^\d{1,5}(\.\d{1,2})?$/.test(raw))
+        throw new FormError(`"${f.label}" צריך להיות מספר (למשל 29.90)`);
+      if (f.key === "pickupEnabled" && raw && !["כן", "לא"].includes(raw)) throw new FormError("איסוף עצמי: יש לכתוב כן או לא");
       if (f.key === "vatRate" && raw && !(/^\d{1,2}(\.\d{1,2})?$/.test(raw) && Number(raw) <= 50))
         throw new FormError("שיעור מע\"מ לא תקין (למשל 18)");
       if (["leadTimeDays", "coverDays", "salesWindowDays"].includes(f.key) && raw && !(/^\d{1,3}$/.test(raw) && Number(raw) >= 1 && Number(raw) <= 365))

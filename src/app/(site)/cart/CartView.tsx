@@ -62,12 +62,10 @@ export function CartView({ freeShippingFrom }: { freeShippingFrom: number | null
             {missing > 0 ? `חסרים ₪${formatPrice(missing)} למשלוח חינם` : "🎉 מגיע לכם משלוח חינם!"}
           </p>
         )}
-        <button type="button" className="btn btn-primary btn-lg" disabled>
-          מעבר לתשלום
-        </button>
-        <p style={{ margin: 0, fontSize: 13, color: "var(--text-muted)" }}>
-          [התשלום יופעל לאחר חיבור סולק התשלומים]
-        </p>
+        <Link href="/checkout" className="btn btn-primary btn-lg">
+          מעבר לקופה ›
+        </Link>
+        <p style={{ margin: 0, fontSize: 13, color: "var(--text-muted)" }}>לא צריך להירשם כדי לקנות.</p>
       </aside>
     </div>
   );

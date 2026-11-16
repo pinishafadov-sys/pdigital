@@ -10,6 +10,7 @@ import { db } from "@/lib/db";
 import {
   bool, date, FormError, handle, int, oneOf, optInt, optStr, safeUrl, slugFrom, str, type ActionState,
 } from "@/lib/form";
+import { changeStock } from "@/lib/stock";
 import { saveImage } from "@/lib/upload";
 
 const refresh = () => revalidatePath("/", "layout");
@@ -257,11 +258,32 @@ export async function updateOrder(_p: ActionState, fd: FormData): Promise<Action
   const me = await requireAdmin("MANAGER");
   return handle(async () => {
     const status = oneOf(fd, "status", ["PENDING_PAYMENT", "PAID", "PROCESSING", "SHIPPED", "DELIVERED", "CANCELLED", "REFUNDED"] as const, "PAID");
-    await db.order.update({
-      where: { id: id(fd) },
-      data: { status, trackingNumber: optStr(fd, "trackingNumber", 80), internalNotes: optStr(fd, "internalNotes", 2000) },
+    const paidStates = ["PAID", "PROCESSING", "SHIPPED", "DELIVERED"];
+    const order = await db.order.findUniqueOrThrow({ where: { id: id(fd) }, include: { items: true } });
+    await db.$transaction(async (tx) => {
+      // Stock is taken when an order is first marked paid, and returned if it is cancelled/refunded.
+      let stockDeducted = order.stockDeducted;
+      if (!stockDeducted && paidStates.includes(status)) {
+        for (const it of order.items)
+          if (it.variantId) await changeStock(it.variantId, -it.quantity, "ONLINE_SALE", { userId: me.id, orderId: order.id, note: `הזמנה #${order.orderNumber}` }, tx);
+        stockDeducted = true;
+      } else if (stockDeducted && (status === "CANCELLED" || status === "REFUNDED" || status === "PENDING_PAYMENT")) {
+        for (const it of order.items)
+          if (it.variantId) await changeStock(it.variantId, it.quantity, "ORDER_CANCELLED", { userId: me.id, orderId: order.id, note: `הזמנה #${order.orderNumber}` }, tx);
+        stockDeducted = false;
+      }
+      await tx.order.update({
+        where: { id: order.id },
+        data: {
+          status,
+          stockDeducted,
+          paidAt: paidStates.includes(status) ? order.paidAt ?? new Date() : order.paidAt,
+          trackingNumber: optStr(fd, "trackingNumber", 80),
+          internalNotes: optStr(fd, "internalNotes", 2000),
+        },
+      });
     });
-    await audit(me.id, `order_${status.toLowerCase()}`, "Order", id(fd));
-    revalidatePath("/admin/orders");
+    await audit(me.id, `order_${status.toLowerCase()}`, "Order", order.id);
+    revalidatePath("/", "layout");
   });
 }
