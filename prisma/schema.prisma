@@ -193,6 +193,7 @@ model Product {
   warrantyMonths   Int?
   isWeeklyDeal     Boolean            @default(false) // "מבצעי השבוע"
   noReorder        Boolean            @default(false) // exclude from reorder alerts (seasonal / discontinued)
+  inGoogleShopping Boolean            @default(true) // include in the Google Shopping product feed
   seoTitle         String?
   seoDescription   String?
   images           ProductImage[]

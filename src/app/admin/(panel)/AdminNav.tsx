@@ -20,6 +20,7 @@ const NAV = [
   { href: "/admin/pages", label: "עמודי תוכן", dot: "var(--brand-blue-on-dark)" },
   { href: "/admin/coupons", label: "קופונים", dot: "var(--brand-pink-on-dark)" },
   { href: "/admin/marketing", label: "רשימת דיוור ומבצעים", dot: "var(--whatsapp)" },
+  { href: "/admin/google-shopping", label: "גוגל שופינג", dot: "var(--brand-blue-on-dark)" },
   { href: "/admin/settings", label: "הגדרות ו-SEO", dot: "var(--text-on-dark-muted)" },
   { href: "/admin/users", label: "משתמשים ואבטחה", dot: "var(--brand-purple-light-on-dark)" },
 ];

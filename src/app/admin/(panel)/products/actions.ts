@@ -83,6 +83,7 @@ export async function saveProduct(_prev: ActionState, fd: FormData): Promise<Act
       warrantyMonths: optInt(fd, "warrantyMonths", { min: 0, max: 240 }),
       isWeeklyDeal: bool(fd, "isWeeklyDeal"),
       noReorder: bool(fd, "noReorder"),
+      inGoogleShopping: bool(fd, "inGoogleShopping"),
       seoTitle: optStr(fd, "seoTitle", 120),
       seoDescription: optStr(fd, "seoDescription", 300),
     };
