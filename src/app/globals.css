@@ -888,6 +888,7 @@ a:hover .logo .s4 {
 
 .pcard-img {
   position: relative;
+  width: 100%;
   aspect-ratio: 1 / 1;
   max-height: 200px;
   background: var(--bg-page);
@@ -979,6 +980,11 @@ a:hover .logo .s4 {
 .pcard-center {
   text-align: center;
   align-items: center;
+}
+
+.pcard-center .pcard-badges,
+.pcard-center .btn {
+  align-self: stretch;
 }
 
 .pcard-center .price {
