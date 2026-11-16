@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { Logo } from "@/components/Logo";
-import { IconPhone, IconPin, IconSearch, IconUser, IconWhatsapp } from "@/components/Icons";
+import { IconPhone, IconSearch, IconUser, IconWhatsapp } from "@/components/Icons";
 import { getSettings, telLink, whatsappLink } from "@/lib/settings";
 import { getNavCategories } from "@/lib/queries";
 import { CartLink } from "./CartBits";
@@ -28,7 +28,6 @@ export async function Header() {
   const cats = await getNavCategories();
   const wa = whatsappLink(s.business.whatsapp);
   const tel = telLink(s.business.phone);
-  const nav = s.business.navigationUrl || null;
 
   return (
     <header className="site-header">
@@ -43,9 +42,6 @@ export async function Header() {
           </Bubble>
           <Bubble href={tel} label="טלפון" cls="bubble-phone">
             <IconPhone size={22} color="#fff" />
-          </Bubble>
-          <Bubble href={nav} label="ניווט" cls="bubble-nav">
-            <IconPin size={24} color="var(--text-ink)" />
           </Bubble>
         </div>
 
