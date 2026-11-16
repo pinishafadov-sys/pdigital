@@ -71,8 +71,7 @@ export async function Footer() {
             <li>{tel ? <a href={tel}>{s.business.phone}</a> : s.business.phone}</li>
             <li>{wa ? <a href={wa} target="_blank" rel="noopener noreferrer">וואטסאפ</a> : s.business.whatsapp}</li>
             <li>{s.business.email.includes("@") ? <a href={`mailto:${s.business.email}`}>{s.business.email}</a> : s.business.email}</li>
-            <li>{s.business.address}</li>
-            <li style={{ whiteSpace: "pre-line" }}>{s.business.hours}</li>
+            <li><Link href="/contact">טופס יצירת קשר</Link></li>
           </ul>
         </div>
       </div>
