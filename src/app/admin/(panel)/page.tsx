@@ -6,6 +6,7 @@ import { ORDER_STATUS } from "@/lib/order-status";
 import { fmtDays, reorderReport } from "@/lib/reorder";
 import { getSettings } from "@/lib/settings";
 import { AdminTop } from "./AdminTop";
+import { SmartSearch } from "./SmartSearch";
 
 const STATUS = ORDER_STATUS;
 const sevenDaysAgo = () => new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
@@ -56,6 +57,9 @@ export default async function Dashboard({ searchParams }: { searchParams: Promis
       <main className="admin-content">
         {sp.pw && <p className="form-ok">הסיסמה עודכנה בהצלחה.</p>}
         {sp.denied && <p className="form-error">אין לך הרשאה למסך הזה.</p>}
+        <section aria-label="חיפוש במערכת" className="card" style={{ padding: 16 }}>
+          <SmartSearch />
+        </section>
         <p className="muted" style={{ margin: 0 }}>שלום {me.displayName}, הנה מה שקורה ב-7 הימים האחרונים.</p>
 
         <section className="kpis" aria-label="מדדים עיקריים">

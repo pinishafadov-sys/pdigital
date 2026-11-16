@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { matchDestinations } from "@/lib/admin-destinations";
 import { requireAdmin } from "@/lib/auth/session";
 import { db } from "@/lib/db";
 import { formatDateTime, formatPrice } from "@/lib/format";
@@ -38,7 +39,8 @@ export default async function AdminSearchPage({ searchParams }: { searchParams: 
         db.page.findMany({ where: { OR: [{ title: ci(q) }, { body: ci(q) }] }, take: 10 }),
         db.banner.findMany({ where: { OR: [{ title: ci(q) }, { subtitle: ci(q) }, { alt: ci(q) }] }, take: 10 }),
       ]);
-  const count = orders.length + products.length + categories.length + articles.length + pages.length + banners.length;
+  const screens = q.length >= 2 ? matchDestinations(q, 6) : [];
+  const count = screens.length + orders.length + products.length + categories.length + articles.length + pages.length + banners.length;
 
   return (
     <>
@@ -55,6 +57,18 @@ export default async function AdminSearchPage({ searchParams }: { searchParams: 
           <p className="muted">לא נמצאו תוצאות עבור &quot;{q}&quot;.</p>
         ) : (
           <>
+            {screens.length > 0 && (
+              <section className="card" aria-labelledby="r-screens">
+                <h2 id="r-screens">מסכים והגדרות</h2>
+                <div className="toolbar-row">
+                  {screens.map((d) => (
+                    <Link key={d.href} href={d.href} className="btn btn-ghost">
+                      {d.label} ←
+                    </Link>
+                  ))}
+                </div>
+              </section>
+            )}
             {orders.length > 0 && (
               <section className="card table-wrap" aria-labelledby="r-orders">
                 <div style={{ display: "flex", justifyContent: "space-between", gap: 8 }}>
