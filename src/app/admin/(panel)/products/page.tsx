@@ -30,7 +30,15 @@ export default async function ProductsPage({ searchParams }: { searchParams: Pro
 
   return (
     <>
-      <AdminTop title="מוצרים ומלאי" actions={<Link href="/admin/products/new" className="btn btn-primary" style={{ minHeight: 40 }}>+ מוצר חדש</Link>} />
+      <AdminTop
+        title="מוצרים"
+        actions={
+          <>
+            <Link href="/admin/products/import" className="btn btn-ghost" style={{ minHeight: 40 }}>ייבוא מאקסל</Link>
+            <Link href="/admin/products/new" className="btn btn-primary" style={{ minHeight: 40 }}>+ מוצר חדש</Link>
+          </>
+        }
+      />
       <main className="admin-content">
         <form className="toolbar-row" method="get">
           <input type="search" name="q" defaultValue={q} placeholder="חיפוש לפי שם או מק״ט" aria-label="חיפוש מוצר" />

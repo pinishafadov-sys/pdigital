@@ -20,10 +20,13 @@ export async function generateMetadata({ params }: { params: Params }): Promise<
   if (!p) return {};
   const title = p.seoTitle || `${p.name}${p.brand ? ` - ${p.brand.name}` : ""}`;
   const description = p.seoDescription || plainText(p.shortDescription || p.description || p.name);
+  const soldOut = !p.variants.some((v) => v.stock > 0);
   return {
     title,
     description,
     alternates: { canonical: `/product/${p.slug}` },
+    // Sold-out products are hidden from listings; tell Google not to show them either.
+    ...(soldOut ? { robots: { index: false, follow: true } } : {}),
     openGraph: {
       type: "website",
       title,

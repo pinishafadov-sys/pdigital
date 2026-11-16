@@ -1,5 +1,6 @@
 import type { MetadataRoute } from "next";
 import { db } from "@/lib/db";
+import { LISTED } from "@/lib/queries";
 import { siteUrl } from "@/lib/settings";
 
 export const dynamic = "force-dynamic";
@@ -10,7 +11,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const [cats, products, pages, articles] = await Promise.all([
     db.category.findMany({ where: { isActive: true }, select: { slug: true, updatedAt: true, parentId: true } }),
     db.product.findMany({
-      where: { status: "ACTIVE" },
+      where: LISTED,
       select: { slug: true, updatedAt: true, images: { select: { url: true }, take: 5, orderBy: { sortOrder: "asc" } } },
     }),
     db.page.findMany({ where: { isPublished: true }, select: { slug: true, updatedAt: true } }),

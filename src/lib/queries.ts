@@ -5,6 +5,16 @@ import type { Prisma, ProductTag } from "@/generated/prisma/client";
 
 const now = () => new Date();
 
+/**
+ * Products shown in listings (home, categories, search, accessories, sitemap):
+ * active, and with at least one variant in stock. A sold-out product disappears
+ * from the site automatically and comes back by itself when it is restocked.
+ */
+export const LISTED = {
+  status: "ACTIVE",
+  variants: { some: { isActive: true, stock: { gt: 0 } } },
+} satisfies Prisma.ProductWhereInput;
+
 const productInclude = {
   category: { select: { name: true, slug: true, parent: { select: { name: true, slug: true } } } },
   brand: { select: { name: true, slug: true } },
@@ -95,13 +105,13 @@ export async function getHomeData() {
     db.banner.findFirst({ where: activeBanner("HOME_HERO"), orderBy: { sortOrder: "asc" } }),
     db.banner.findMany({ where: activeBanner("HOME_SIDE"), orderBy: { sortOrder: "asc" }, take: 2 }),
     db.product.findMany({
-      where: { status: "ACTIVE", OR: [{ isWeeklyDeal: true }, { tags: { has: "SALE" } }] },
+      where: { ...LISTED, OR: [{ isWeeklyDeal: true }, { tags: { has: "SALE" } }] },
       include: productInclude,
       orderBy: { updatedAt: "desc" },
       take: 24,
     }),
     db.product.findMany({
-      where: { status: "ACTIVE" },
+      where: LISTED,
       include: productInclude,
       orderBy: [{ createdAt: "desc" }],
       take: 10,
@@ -138,7 +148,7 @@ export const getCategoryBySlug = cache(async (slug: string) =>
 export async function getCategoryProducts(categoryId: string, childIds: string[], f: CategoryFilters) {
   const scopeIds = f.sub ? [f.sub] : [categoryId, ...childIds];
   const rows = await db.product.findMany({
-    where: { status: "ACTIVE", categoryId: { in: scopeIds } },
+    where: { ...LISTED, categoryId: { in: scopeIds } },
     include: { ...productInclude, productType: { include: { specFields: { where: { isFilterable: true }, orderBy: { sortOrder: "asc" } } } } },
   });
   // Accessories stay out of the main listing unless their sub-category is chosen.
@@ -228,14 +238,17 @@ export const getProduct = cache(async (slug: string) =>
 );
 
 export function cardsFromAccessories(rows: { accessory: ProductRow }[]) {
-  return rows.filter((r) => r.accessory.status === "ACTIVE").map((r) => toCard(r.accessory));
+  return rows
+    .filter((r) => r.accessory.status === "ACTIVE")
+    .map((r) => toCard(r.accessory))
+    .filter((c) => c.inStock);
 }
 
 export async function getRelatedAccessories(categoryId: string, excludeId: string) {
   const acc = await db.category.findFirst({ where: { parentId: categoryId, isAccessories: true } });
   if (!acc) return [];
   const rows = await db.product.findMany({
-    where: { status: "ACTIVE", categoryId: acc.id, id: { not: excludeId } },
+    where: { ...LISTED, categoryId: acc.id, id: { not: excludeId } },
     include: productInclude,
     take: 4,
   });
@@ -249,7 +262,7 @@ export async function searchProducts(q: string, limit = 48) {
   if (term.length < 2) return [];
   const rows = await db.product.findMany({
     where: {
-      status: "ACTIVE",
+      ...LISTED,
       OR: [
         { name: { contains: term, mode: "insensitive" } },
         { shortDescription: { contains: term, mode: "insensitive" } },
@@ -266,7 +279,7 @@ export async function searchProducts(q: string, limit = 48) {
 
 export async function productsByTag(tag: ProductTag, limit = 96) {
   const rows = await db.product.findMany({
-    where: { status: "ACTIVE", OR: [{ tags: { has: tag } }, ...(tag === "SALE" ? [{ isWeeklyDeal: true }] : [])] },
+    where: { ...LISTED, OR: [{ tags: { has: tag } }, ...(tag === "SALE" ? [{ isWeeklyDeal: true }] : [])] },
     include: productInclude,
     orderBy: { updatedAt: "desc" },
     take: limit,

@@ -8,6 +8,7 @@ export const ADMIN_DESTINATIONS: Destination[] = [
   { label: "לקוחות יוצרים קשר", href: "/admin/messages", group: "מסכים", keywords: "פניות הודעות צור קשר לקוח פנייה" },
   { label: "מוצרים", href: "/admin/products", group: "מסכים", keywords: "מוצר פריט מחיר מחירים קטלוג" },
   { label: "מוצר חדש", href: "/admin/products/new", group: "פעולות", keywords: "הוספת מוצר העלאת מוצר להוסיף מוצר חדש" },
+  { label: "ייבוא מוצרים מאקסל", href: "/admin/products/import", group: "פעולות", keywords: "ייבוא אקסל excel csv קובץ העלאת מוצרים רשימה" },
   { label: "מלאי", href: "/admin/stock", group: "מסכים", keywords: "מלאי כמות נמכר בחנות הגיעה סחורה ספירה החזרה" },
   { label: "המלצות להזמנה", href: "/admin/reorder", group: "מסכים", keywords: "להזמין ספק הזמנה מספק נמכרים ביותר אוזל" },
   { label: "דוח מלאי שנתי", href: "/admin/reports/stock", group: "מסכים", keywords: "דוח מלאי שנתי רואה חשבון ספירת מלאי pdf אקסל הדפסה שווי" },
