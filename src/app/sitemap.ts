@@ -21,6 +21,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   return [
     { url: base, changeFrequency: "daily", priority: 1 },
     { url: `${base}/articles`, changeFrequency: "weekly", priority: 0.6 },
+    { url: `${base}/contact`, changeFrequency: "yearly", priority: 0.5 },
     { url: `${base}/site-map`, changeFrequency: "monthly", priority: 0.3 },
     ...cats
       .filter((c) => !c.parentId)

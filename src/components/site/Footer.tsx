@@ -46,6 +46,7 @@ export async function Footer() {
         <nav className="footer-col" aria-labelledby="f-service">
           <h2 id="f-service">שירות לקוחות</h2>
           <ul>
+            <li><Link href="/contact">צור קשר</Link></li>
             <li><Link href="/pages/shipping">משלוחים</Link></li>
             <li><Link href="/pages/returns">אחריות והחזרות</Link></li>
             <li><Link href="/pages/faq">שאלות נפוצות</Link></li>
@@ -78,6 +79,7 @@ export async function Footer() {
       <div className="container footer-bottom">
         <span>© {new Date().getFullYear()} {s.business.name}. כל הזכויות שמורות.</span>
         <nav aria-label="קישורים משפטיים">
+          <Link href="/contact">צור קשר</Link>
           <Link href="/pages/terms">תקנון</Link>
           <Link href="/pages/privacy">פרטיות</Link>
           <Link href="/pages/accessibility">נגישות</Link>

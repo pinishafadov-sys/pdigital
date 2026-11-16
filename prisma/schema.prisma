@@ -501,6 +501,29 @@ model MenuItem {
   isActive   Boolean    @default(true)
 }
 
+enum ContactStatus {
+  NEW
+  IN_PROGRESS
+  HANDLED
+}
+
+// Messages sent from the "צור קשר" page
+model ContactMessage {
+  id        String        @id @default(cuid())
+  name      String
+  phone     String
+  email     String
+  message   String
+  status    ContactStatus @default(NEW)
+  adminNote String?
+  ip        String?
+  handledAt DateTime?
+  createdAt DateTime      @default(now())
+
+  @@index([status, createdAt])
+  @@index([ip, createdAt])
+}
+
 // Business details & global settings (name, phone, WhatsApp, address, hours,
 // free shipping threshold...). One row per key, value is JSON.
 model SiteSetting {

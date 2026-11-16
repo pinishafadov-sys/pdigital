@@ -1885,6 +1885,121 @@ input[type="checkbox"] {
   font-size: 0.9375rem;
 }
 
+/* ------------------------------------------------------------------ contact page */
+.contact-layout {
+  display: grid;
+  gap: 20px;
+  align-items: start;
+}
+
+@media (min-width: 900px) {
+  .contact-layout {
+    grid-template-columns: 1.6fr 1fr;
+  }
+}
+
+.contact-card {
+  padding: 22px;
+}
+
+.contact-card h2 {
+  margin: 0 0 16px;
+  font-size: 1.25rem;
+}
+
+.contact-card h3 {
+  margin: 20px 0 6px;
+  font-size: 1.0625rem;
+}
+
+.contact-form,
+.contact-form label {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.contact-form label {
+  gap: 6px;
+  font-weight: 500;
+}
+
+.contact-form textarea.input {
+  padding: 12px;
+  min-height: 130px;
+  resize: vertical;
+}
+
+.contact-row {
+  display: grid;
+  gap: 14px;
+}
+
+@media (min-width: 600px) {
+  .contact-row {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+.contact-error {
+  margin: 0;
+  background: var(--bg-pink-soft);
+  color: var(--text-pink-ink);
+  border-radius: var(--radius-md);
+  padding: 10px 14px;
+  font-weight: 500;
+}
+
+.contact-privacy {
+  margin: 0;
+  font-size: 0.875rem;
+  color: var(--text-muted);
+}
+
+.contact-privacy a {
+  color: var(--brand-purple);
+  text-decoration: underline;
+}
+
+.contact-done {
+  background: var(--bg-green-soft);
+  color: var(--text-success);
+  border-radius: var(--radius-md);
+  padding: 22px;
+  text-align: center;
+  font-size: 1.125rem;
+}
+
+.contact-done p {
+  margin: 6px 0 0;
+}
+
+.contact-direct {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.contact-direct li {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-weight: 500;
+}
+
+.contact-ico {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
 /* ------------------------------------------------------------------ accessibility menu */
 .a11y-fab {
   position: fixed;

@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { LogoMark } from "@/components/Logo";
 import { getCurrentAdmin } from "@/lib/auth/session";
+import { db } from "@/lib/db";
 import { redirect } from "next/navigation";
 import { logoutAction } from "../auth-actions";
 import { AdminNav } from "./AdminNav";
@@ -17,6 +18,7 @@ const ROLE = { OWNER: "מנהל ראשי", MANAGER: "מנהל", EDITOR: "עור�
 export default async function PanelLayout({ children }: { children: React.ReactNode }) {
   const me = await getCurrentAdmin();
   if (!me) redirect("/admin/login");
+  const newMessages = await db.contactMessage.count({ where: { status: "NEW" } });
 
   return (
     <div className="admin-body admin-shell">
@@ -36,7 +38,7 @@ export default async function PanelLayout({ children }: { children: React.ReactN
             <button type="submit" className="link-btn">התנתקות</button>
           </form>
         </div>
-        {!me.mustChangePassword && <AdminNav />}
+        {!me.mustChangePassword && <AdminNav newMessages={newMessages} />}
         <div className="admin-user">
           מחובר כ: {me.displayName}
           <br />

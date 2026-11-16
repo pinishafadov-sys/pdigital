@@ -87,6 +87,7 @@ export async function Header() {
             </Link>
           ))}
           <Link href="/articles">מאמרים</Link>
+          <Link href="/contact">צור קשר</Link>
         </nav>
       )}
     </header>

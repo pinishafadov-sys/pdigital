@@ -37,6 +37,7 @@ export default async function SiteMapPage() {
               <li><Link href="/search?tag=NEW">חדש באתר</Link></li>
               <li><Link href="/cart">עגלת קניות</Link></li>
               <li><Link href="/articles">מאמרים</Link></li>
+              <li><Link href="/contact">צור קשר</Link></li>
             </ul>
           </section>
           <section className="panel" aria-labelledby="sm-cats">
