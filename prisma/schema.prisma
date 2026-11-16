@@ -303,6 +303,7 @@ model Customer {
   consentAt        DateTime?
   consentSource    String? // "קופה" / "צור קשר" / "ידני"
   unsubscribedAt   DateTime?
+  unsubToken       String    @unique @default(cuid()) // for the one-click "remove me" link in emails
   isClubMember     Boolean   @default(false)
   addresses        Address[]
   orders           Order[]
@@ -530,6 +531,20 @@ model ContactMessage {
 
   @@index([status, createdAt])
   @@index([ip, createdAt])
+}
+
+// Promotional email sends (history)
+model Campaign {
+  id         String    @id @default(cuid())
+  subject    String
+  body       String
+  audience   String // description of the filter used, e.g. "כל הרשימה" / "קנו בגיימינג"
+  recipients Int       @default(0)
+  sent       Int       @default(0)
+  failed     Int       @default(0)
+  userId     String?
+  createdAt  DateTime  @default(now())
+  finishedAt DateTime?
 }
 
 // Business details & global settings (name, phone, WhatsApp, address, hours,

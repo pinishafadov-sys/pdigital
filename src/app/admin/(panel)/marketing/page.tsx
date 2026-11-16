@@ -6,6 +6,8 @@ import { DEFAULT_MESSAGE, marketingList, waNumber } from "@/lib/marketing";
 import { AdminTop } from "../AdminTop";
 import { ConfirmButton } from "../ui";
 import { unsubscribeAction } from "./actions";
+import { CampaignForm } from "./CampaignForm";
+import { WaSequence } from "./WaSequence";
 
 export const metadata = { title: "רשימת דיוור ומבצעים" };
 
@@ -15,9 +17,10 @@ export default async function MarketingPage({ searchParams }: { searchParams: Pr
   await requireAdmin("MANAGER");
   const sp = await searchParams;
   const msg = (sp.msg ?? DEFAULT_MESSAGE).slice(0, 1000);
-  const [{ customers, total, unsubscribed }, cats] = await Promise.all([
+  const [{ customers, total, unsubscribed }, cats, campaigns] = await Promise.all([
     marketingList(sp),
     db.category.findMany({ where: { parentId: null }, orderBy: { sortOrder: "asc" } }),
+    db.campaign.findMany({ orderBy: { createdAt: "desc" }, take: 10 }),
   ]);
   const exportQs = new URLSearchParams(Object.entries({ q: sp.q ?? "", cat: sp.cat ?? "", days: sp.days ?? "" }).filter(([, v]) => v)).toString();
 
@@ -69,6 +72,62 @@ export default async function MarketingPage({ searchParams }: { searchParams: Pr
           </div>
         </form>
 
+        <section className="card form-section" aria-labelledby="bulk-title">
+          <h2 id="bulk-title" style={{ margin: 0 }}>שליחה לכולם בבת אחת ({total} לקוחות לפי הסינון)</h2>
+          <div className="bulk-grid">
+            <div className="bulk-box">
+              <h3>📧 מייל לכולם</h3>
+              <p className="muted">לחיצה אחת שולחת מייל אישי לכל הרשימה, עם קישור הסרה אוטומטי. כדאי לשלוח קודם בדיקה אליך.</p>
+              <CampaignForm count={total} filters={{ q: sp.q ?? "", cat: sp.cat ?? "", days: sp.days ?? "" }} />
+            </div>
+            <div className="bulk-box">
+              <h3>📱 רשימת תפוצה בוואטסאפ</h3>
+              <ol className="bulk-steps">
+                <li>
+                  <a href={`/admin/marketing/contacts${exportQs ? `?${exportQs}` : ""}`} download className="btn btn-primary" style={{ minHeight: 38 }}>
+                    הורדת אנשי קשר לטלפון
+                  </a>
+                </li>
+                <li>פותחים את הקובץ בטלפון ← &quot;ייבוא&quot;: כל הלקוחות נכנסים לאנשי הקשר.</li>
+                <li>ב-WhatsApp Business: ⋮ ← &quot;רשימת תפוצה חדשה&quot; ← בוחרים את כולם.</li>
+                <li>כותבים את ההודעה פעם אחת ושולחים. כל לקוח מקבל אותה בנפרד.</li>
+              </ol>
+              <p className="muted" style={{ margin: 0 }}>ההודעה מגיעה רק למי ששמר את מספר החנות אצלו.</p>
+            </div>
+            <div className="bulk-box">
+              <h3>⚡ וואטסאפ ברצף</h3>
+              <p className="muted">פותח את וואטסאפ ללקוח אחרי לקוח, עם ההודעה שכתבת למעלה כבר מוכנה. רק לוחצים &quot;שלח&quot;.</p>
+              <WaSequence
+                people={customers.flatMap((c) => {
+                  const wa = waNumber(c.phone);
+                  const name = c.firstName === "-" ? c.email : c.firstName;
+                  return wa ? [{ id: c.id, name, href: `https://wa.me/${wa}?text=${encodeURIComponent(msg.replaceAll("{שם}", c.firstName === "-" ? "" : c.firstName))}` }] : [];
+                })}
+              />
+            </div>
+          </div>
+        </section>
+
+        {campaigns.length > 0 && (
+          <section className="card table-wrap" aria-labelledby="hist-title">
+            <h2 id="hist-title">מיילים שנשלחו</h2>
+            <table className="table">
+              <thead><tr><th>מתי</th><th>כותרת</th><th>למי</th><th>נשלחו</th><th>נכשלו</th></tr></thead>
+              <tbody>
+                {campaigns.map((c) => (
+                  <tr key={c.id}>
+                    <td className="muted">{formatDateTime(c.createdAt)}</td>
+                    <td>{c.subject}</td>
+                    <td>{c.audience}</td>
+                    <td>{c.sent} / {c.recipients}</td>
+                    <td>{c.failed}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </section>
+        )}
+
         <section className="card table-wrap" aria-label="לקוחות">
           {customers.length ? (
             <table className="table">
@@ -107,10 +166,6 @@ export default async function MarketingPage({ searchParams }: { searchParams: Pr
           )}
         </section>
 
-        <section className="help">
-          <b>איך שולחים לכולם בבת אחת (בחינם):</b> מורידים את הרשימה לאקסל, מוסיפים את המספרים לאנשי הקשר בטלפון, ובאפליקציית
-          WhatsApp Business יוצרים &quot;רשימת תפוצה&quot; ושולחים. ההודעה תגיע רק למי ששמר את מספר החנות אצלו.
-        </section>
       </main>
     </>
   );
