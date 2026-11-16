@@ -1,6 +1,7 @@
 "use server";
 
 import { clientInfo } from "@/lib/auth/session";
+import { recordMarketingConsent } from "@/lib/consent";
 import { db } from "@/lib/db";
 import { sendMail } from "@/lib/email";
 import { siteUrl } from "@/lib/settings";
@@ -31,6 +32,10 @@ export async function sendContactAction(_prev: ContactState, fd: FormData): Prom
   if (recent >= MAX_PER_IP_PER_HOUR) return { error: "נשלחו כבר כמה הודעות. נסו שוב מאוחר יותר או התקשרו אלינו.", fields };
 
   const saved = await db.contactMessage.create({ data: { name, phone: phone.replace(/^\+972/, "0"), email, message, ip } });
+  if (fd.get("marketing") === "on") {
+    const [firstName, ...rest] = name.split(/\s+/);
+    await recordMarketingConsent({ email, firstName, lastName: rest.join(" "), phone: saved.phone, source: "צור קשר" });
+  }
 
   // Notify the owner (works once email sending is connected; locally it is printed to the server log).
   const owner = await db.adminUser.findFirst({ where: { role: "OWNER", isActive: true, email: { not: null } }, orderBy: { createdAt: "asc" } });

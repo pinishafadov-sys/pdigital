@@ -299,6 +299,10 @@ model Customer {
   lastName         String
   passwordHash     String? // null = guest checkout only
   marketingConsent Boolean   @default(false)
+  // Proof of consent for advertising messages (Israeli anti-spam law): when, where, and opt-out.
+  consentAt        DateTime?
+  consentSource    String? // "קופה" / "צור קשר" / "ידני"
+  unsubscribedAt   DateTime?
   isClubMember     Boolean   @default(false)
   addresses        Address[]
   orders           Order[]

@@ -19,6 +19,7 @@ export const ADMIN_DESTINATIONS: Destination[] = [
   { label: "מאמרים", href: "/admin/articles", group: "מסכים", keywords: "מאמר בלוג תוכן קידום גוגל" },
   { label: "מאמר חדש", href: "/admin/articles/new", group: "פעולות", keywords: "כתיבת מאמר להוסיף מאמר" },
   { label: "עמודי תוכן", href: "/admin/pages", group: "מסכים", keywords: "עמוד תקנון פרטיות נגישות הצהרת נגישות משלוחים החזרות אודות שאלות נפוצות" },
+  { label: "רשימת דיוור ומבצעים", href: "/admin/marketing", group: "מסכים", keywords: "דיוור וואטסאפ ווצאפ מבצע הודעה לקוחות רשימת תפוצה sms מייל פרסום ספאם" },
   { label: "קופונים", href: "/admin/coupons", group: "מסכים", keywords: "קופון הנחה קוד מבצע" },
   { label: "חיפוש במערכת", href: "/admin/search", group: "מסכים", keywords: "חיפוש" },
   { label: "פרטי העסק", href: "/admin/settings#business", group: "הגדרות", keywords: "טלפון וואטסאפ כתובת שעות פעילות ח.פ שם העסק פייסבוק אינסטגרם ניווט מע\"מ מעמ" },

@@ -2,6 +2,7 @@
 
 import { clientInfo } from "@/lib/auth/session";
 import { getShippingOptions, priceCart, shippingCost, type CartLine } from "@/lib/checkout";
+import { recordMarketingConsent } from "@/lib/consent";
 import { db } from "@/lib/db";
 import { sendMail } from "@/lib/email";
 import { formatPrice } from "@/lib/format";
@@ -66,11 +67,16 @@ export async function placeOrderAction(_prev: CheckoutState, fd: FormData): Prom
 
   // Optional: save details for next time (no password needed to buy).
   let customerId: string | null = null;
+  // Promotions consent is saved on its own, even without "save my details".
+  if (fd.get("marketing") === "on") {
+    const c = await recordMarketingConsent({ email: f.email, firstName: f.firstName, lastName: f.lastName, phone, source: "קופה" });
+    customerId = c.id;
+  }
   if (fd.get("saveDetails") === "on") {
     const customer = await db.customer.upsert({
       where: { email: f.email },
-      update: { firstName: f.firstName, lastName: f.lastName, phone, ...(fd.get("marketing") === "on" ? { marketingConsent: true } : {}) },
-      create: { email: f.email, firstName: f.firstName, lastName: f.lastName, phone, marketingConsent: fd.get("marketing") === "on" },
+      update: { firstName: f.firstName, lastName: f.lastName, phone },
+      create: { email: f.email, firstName: f.firstName, lastName: f.lastName, phone },
     });
     customerId = customer.id;
     if (f.method === "delivery") {

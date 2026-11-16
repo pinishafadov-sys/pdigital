@@ -134,7 +134,7 @@ export function CheckoutForm() {
           </label>
           <label className="check-line">
             <input type="checkbox" name="marketing" />
-            אשמח לקבל מבצעים והטבות של מועדון pdigital (לא חובה)
+            אשמח לקבל מבצעים והטבות של מועדון pdigital בוואטסאפ, SMS ומייל (לא חובה, אפשר להסיר בכל עת)
           </label>
           <label className="visually-hidden" aria-hidden="true">
             אתר

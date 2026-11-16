@@ -40,6 +40,10 @@ export function ContactForm() {
         <span>במה נוכל לעזור? *</span>
         <textarea name="message" required maxLength={3000} rows={5} defaultValue={f?.message} className="input" />
       </label>
+      <label style={{ flexDirection: "row", alignItems: "flex-start", gap: 10, fontWeight: 400 }}>
+        <input type="checkbox" name="marketing" style={{ marginTop: 4 }} />
+        <span>אשמח לקבל מבצעים והטבות של pdigital בוואטסאפ, SMS ומייל (לא חובה, אפשר להסיר בכל עת)</span>
+      </label>
       {/* Hidden from people, catches spam bots */}
       <label className="visually-hidden" aria-hidden="true">
         אתר
