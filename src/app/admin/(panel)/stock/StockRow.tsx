@@ -36,11 +36,12 @@ export function StockRow({
         </select>
         <input name="qty" type="number" min={kind === "COUNT" ? 0 : 1} defaultValue={kind === "COUNT" ? stock : 1} key={kind}
           className="input" style={{ width: 80 }} aria-label="כמות" inputMode="numeric" />
-        {kind === "STORE_SALE" && (
-          <label className="stock-price">
-            <span>₪ ליח&apos;</span>
+        {(kind === "STORE_SALE" || kind === "RETURN") && (
+          <label className="stock-price" key={kind}>
+            <span>{kind === "RETURN" ? "₪ הוחזר ליח'" : "₪ ליח'"}</span>
             <input name="price" className="input" defaultValue={price} inputMode="decimal" style={{ width: 90 }}
-              aria-label="מחיר ליחידה שנגבה בפועל, כולל מע״מ" title="המחיר שנגבה בפועל ליחידה (כולל מע״מ). מולא מראש המחיר באתר" />
+              aria-label={kind === "RETURN" ? "סכום שהוחזר ללקוח ליחידה, כולל מע״מ" : "מחיר ליחידה שנגבה בפועל, כולל מע״מ"}
+              title={kind === "RETURN" ? "כמה כסף הוחזר ללקוח ליחידה (0 אם הוחלף במוצר אחר)" : "המחיר שנגבה בפועל ליחידה (כולל מע״מ). מולא מראש המחיר באתר"} />
           </label>
         )}
         <input name="note" className="input" placeholder="הערה (לא חובה)" maxLength={200} aria-label="הערה" />

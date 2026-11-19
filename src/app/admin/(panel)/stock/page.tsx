@@ -87,7 +87,7 @@ export default async function StockPage({ searchParams }: { searchParams: Promis
                     <td>{title(m.variant)}</td>
                     <td>
                       {STOCK_REASON_LABEL[m.reason]}
-                      {m.reason === "STORE_SALE" && m.unitPrice != null && <span className="muted"> · ₪{formatPrice(m.unitPrice)} ליח&apos;</span>}
+                      {(m.reason === "STORE_SALE" || m.reason === "RETURN") && m.unitPrice != null && <span className="muted"> · ₪{formatPrice(m.unitPrice)} ליח&apos;</span>}
                     </td>
                     <td dir="ltr" style={{ color: m.change < 0 ? "var(--text-danger)" : "var(--text-success)", fontWeight: 600 }}>
                       {m.change > 0 ? `+${m.change}` : m.change}

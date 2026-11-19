@@ -37,6 +37,8 @@ model AdminUser {
   resetTokens        PasswordResetToken[]
   stockMovements     StockMovement[]
   purchaseOrders     PurchaseOrder[]
+  cancelsHandled     CancelRequest[]
+  refunds            OrderRefund[]
   createdAt          DateTime       @default(now())
   updatedAt          DateTime       @updatedAt
 }
@@ -387,6 +389,8 @@ model Order {
   trackingNumber  String?
   internalNotes   String?
   items           OrderItem[]
+  cancelRequests  CancelRequest[]
+  refunds         OrderRefund[]
   createdAt       DateTime    @default(now())
   updatedAt       DateTime    @updatedAt
 
@@ -408,6 +412,7 @@ model OrderItem {
   quantity    Int
   lineTotal   Int
   unitCost    Int? // purchase cost per unit (before VAT) when ordered - admin only, for profit reports
+  returnedQty Int             @default(0) // units the customer returned (partial returns)
 
   @@index([orderId])
 }
@@ -647,5 +652,47 @@ model PageView {
   device    String // "mobile" | "desktop"
   createdAt DateTime @default(now())
 
+  @@index([createdAt])
+}
+
+// ---------------------------------------------------------------- cancellations & returns
+
+enum CancelRequestStatus {
+  PENDING  // ממתינה לטיפול
+  APPROVED // אושרה
+  REJECTED // נדחתה
+}
+
+/// A customer's request to cancel an order, sent from the site ("ביטול עסקה").
+model CancelRequest {
+  id          String              @id @default(cuid())
+  orderId     String
+  order       Order               @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  reason      String?
+  status      CancelRequestStatus @default(PENDING)
+  adminNote   String?
+  ip          String?
+  handledAt   DateTime?
+  handledById String?
+  handledBy   AdminUser?          @relation(fields: [handledById], references: [id], onDelete: SetNull)
+  createdAt   DateTime            @default(now())
+
+  @@index([status, createdAt])
+  @@index([orderId])
+}
+
+/// Money returned to a customer for part of an order (partial return).
+model OrderRefund {
+  id            String     @id @default(cuid())
+  orderId       String
+  order         Order      @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  amount        Int // agorot refunded, incl. VAT
+  restockedCost Int        @default(0) // purchase cost of the units that went back to stock (agorot, before VAT)
+  note          String?
+  createdById   String?
+  createdBy     AdminUser? @relation(fields: [createdById], references: [id], onDelete: SetNull)
+  createdAt     DateTime   @default(now())
+
+  @@index([orderId])
   @@index([createdAt])
 }

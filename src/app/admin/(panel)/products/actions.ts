@@ -167,9 +167,10 @@ export async function stockAction(_prev: ActionState, fd: FormData): Promise<Act
     else {
       if (qty === 0) throw new FormError("יש להזין כמות");
       // A store sale keeps the price and cost at the time of sale, for the money statistics.
-      const v = kind === "STORE_SALE" ? await db.productVariant.findUnique({ where: { id: variantId }, select: { price: true, costPrice: true } }) : null;
-      // The price actually charged in the store (incl. VAT); empty = the site price.
-      const charged = kind === "STORE_SALE" ? shekels(fd, "price") : null;
+      const priced = kind === "STORE_SALE" || kind === "RETURN";
+      const v = priced ? await db.productVariant.findUnique({ where: { id: variantId }, select: { price: true, costPrice: true } }) : null;
+      // Store sale: price actually charged; store return: money given back (incl. VAT). Empty = the site price.
+      const charged = priced ? shekels(fd, "price") : null;
       after = await changeStock(variantId, kind === "STORE_SALE" ? -qty : qty, kind, {
         userId: me.id,
         note,

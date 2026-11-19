@@ -8,7 +8,8 @@ import { db } from "@/lib/db";
  *
  * Money:
  * - revenue      = what customers paid, incl. VAT (website orders: order total incl. shipping;
- *                  store sales: product price at the time of the sale)
+ *                  store sales: price charged), minus money returned (partial returns, store returns).
+ *                  Cancelled / refunded orders are left out entirely.
  * - net revenue  = revenue without VAT
  * - cost         = purchase cost of the goods sold (cost price at the time of sale, before VAT)
  * - profit       = net revenue - cost  ("כסף נקי אחרי קנייה")
@@ -106,7 +107,8 @@ async function query(period: Period | "all", from: string) {
   const pv = local(`"createdAt"`);
   const ord = local(`COALESCE(o."paidAt", o."createdAt")`);
   const mv = local(`m."createdAt"`);
-  const [visits, orders, orderCost, store] = await Promise.all([
+  const rf = local(`r."createdAt"`);
+  const [visits, orders, orderCost, store, refunds, storeReturns] = await Promise.all([
     db.$queryRaw<{ k: string; visitors: Num; views: Num }[]>`
       SELECT ${bucket(period, Prisma.sql`${pv}`)} AS k, COUNT(DISTINCT visitor) AS visitors, COUNT(*) AS views
       FROM "PageView" WHERE ${pv} >= ${from}::date GROUP BY 1`,
@@ -126,12 +128,25 @@ async function query(period: Period | "all", from: string) {
         SUM(CASE WHEN COALESCE(m."unitCost", v."costPrice") IS NULL THEN -m.change ELSE 0 END) AS missing
       FROM "StockMovement" m JOIN "ProductVariant" v ON v.id = m."variantId"
       WHERE m.reason = 'STORE_SALE' AND ${mv} >= ${from}::date GROUP BY 1`,
+    // Partial returns of website orders (a fully cancelled order is already left out above).
+    db.$queryRaw<{ k: string; amount: Num; cost: Num }[]>`
+      SELECT ${bucket(period, Prisma.sql`${rf}`)} AS k, SUM(r.amount) AS amount, SUM(r."restockedCost") AS cost
+      FROM "OrderRefund" r JOIN "Order" o ON o.id = r."orderId"
+      WHERE o.status::text IN ${PAID} AND ${rf} >= ${from}::date GROUP BY 1`,
+    // Returns in the store (from the stock screen, with the amount given back).
+    db.$queryRaw<{ k: string; amount: Num; cost: Num }[]>`
+      SELECT ${bucket(period, Prisma.sql`${mv}`)} AS k, SUM(m.change * m."unitPrice") AS amount,
+        SUM(m.change * COALESCE(m."unitCost", v."costPrice")) AS cost
+      FROM "StockMovement" m JOIN "ProductVariant" v ON v.id = m."variantId"
+      WHERE m.reason = 'RETURN' AND m."orderId" IS NULL AND m."unitPrice" IS NOT NULL AND ${mv} >= ${from}::date GROUP BY 1`,
   ]);
   return {
     visits: new Map(visits.map((r) => [r.k, r])),
     orders: new Map(orders.map((r) => [r.k, r])),
     orderCost: new Map(orderCost.map((r) => [r.k, r])),
     store: new Map(store.map((r) => [r.k, r])),
+    refunds: new Map(refunds.map((r) => [r.k, r])),
+    storeReturns: new Map(storeReturns.map((r) => [r.k, r])),
   };
 }
 
@@ -144,6 +159,7 @@ export type StatRow = {
   onlineRevenue: number;
   storeUnits: number;
   storeRevenue: number;
+  returns: number; // money given back (partial website returns + store returns)
   revenue: number;
   net: number;
   cost: number;
@@ -159,9 +175,13 @@ function row(key: string, lbl: string, q: Awaited<ReturnType<typeof query>>, vat
   const s = q.store.get(key);
   const onlineRevenue = n(o?.revenue ?? null);
   const storeRevenue = n(s?.revenue ?? null);
-  const revenue = onlineRevenue + storeRevenue;
+  const rf = q.refunds.get(key);
+  const sr = q.storeReturns.get(key);
+  const returns = n(rf?.amount ?? null) + n(sr?.amount ?? null);
+  const revenue = onlineRevenue + storeRevenue - returns;
   const net = Math.round((revenue * 100) / (100 + vatRate));
-  const cost = n(oc?.cost ?? null) + n(s?.cost ?? null);
+  // Goods that came back to stock are not a cost any more.
+  const cost = n(oc?.cost ?? null) + n(s?.cost ?? null) - n(rf?.cost ?? null) - n(sr?.cost ?? null);
   const visitors = n(v?.visitors ?? null);
   const orders = n(o?.orders ?? null);
   return {
@@ -173,6 +193,7 @@ function row(key: string, lbl: string, q: Awaited<ReturnType<typeof query>>, vat
     onlineRevenue,
     storeUnits: n(s?.units ?? null),
     storeRevenue,
+    returns,
     revenue,
     net,
     cost,

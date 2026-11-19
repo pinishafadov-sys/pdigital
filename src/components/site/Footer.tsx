@@ -49,6 +49,7 @@ export async function Footer() {
             <li><Link href="/contact">צור קשר</Link></li>
             <li><Link href="/pages/shipping">משלוחים</Link></li>
             <li><Link href="/pages/returns">אחריות והחזרות</Link></li>
+            <li><Link href="/cancel">ביטול עסקה</Link></li>
             <li><Link href="/pages/faq">שאלות נפוצות</Link></li>
             <li><Link href="/pages/terms">תקנון האתר</Link></li>
             <li><Link href="/pages/privacy">מדיניות פרטיות</Link></li>

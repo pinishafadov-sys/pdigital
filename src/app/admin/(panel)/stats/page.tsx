@@ -77,7 +77,7 @@ export default async function StatsPage({ searchParams }: { searchParams: Promis
 
         <section className="kpis" aria-label={`סיכום ${rangeName}`}>
           <div className="card kpi"><span className="label">כניסות</span><span className="value">{int(total.visitors)}</span><span className="note">{int(total.views)} צפיות בעמודים · {rangeName}</span></div>
-          <div className="card kpi"><span className="label">הכנסות (כולל מע&quot;מ)</span><span className="value">{ils(total.revenue)}</span><span className="note">אתר {ils(total.onlineRevenue)} · חנות {ils(total.storeRevenue)}</span></div>
+          <div className="card kpi"><span className="label">הכנסות (כולל מע&quot;מ)</span><span className="value">{ils(total.revenue)}</span><span className="note">אתר {ils(total.onlineRevenue)} · חנות {ils(total.storeRevenue)}{total.returns > 0 && <> · החזרות −{ils(total.returns)}</>}</span></div>
           <div className="card kpi"><span className="label">רווח נקי אחרי קנייה</span><span className="value" style={{ color: total.profit < 0 ? "var(--text-danger)" : "var(--text-success)" }}>{ils(total.profit)}</span><span className="note">{pct(margin)} מההכנסות לפני מע&quot;מ</span></div>
           <div className="card kpi"><span className="label">הזמנות באתר</span><span className="value">{int(total.orders)}</span><span className="note">המרה: {pct(total.conversion)} מהכניסות</span></div>
         </section>
@@ -110,7 +110,7 @@ export default async function StatsPage({ searchParams }: { searchParams: Promis
           <table className="table">
             <thead>
               <tr>
-                <th>תקופה</th><th>כניסות</th><th>הזמנות</th><th>הכנסות אתר</th><th>הכנסות חנות</th>
+                <th>תקופה</th><th>כניסות</th><th>הזמנות</th><th>הכנסות אתר</th><th>הכנסות חנות</th><th>החזרות</th>
                 <th>סה&quot;כ הכנסות</th><th>לפני מע&quot;מ</th><th>עלות הסחורה</th><th>רווח נקי</th>
               </tr>
             </thead>
@@ -122,6 +122,7 @@ export default async function StatsPage({ searchParams }: { searchParams: Promis
                   <td>{int(r.orders)}</td>
                   <td>{ils(r.onlineRevenue)}</td>
                   <td>{ils(r.storeRevenue)}</td>
+                  <td>{r.returns ? `−${ils(r.returns)}` : ils(0)}</td>
                   <td><b>{ils(r.revenue)}</b></td>
                   <td>{ils(r.net)}</td>
                   <td>{ils(r.cost)}</td>
@@ -131,7 +132,7 @@ export default async function StatsPage({ searchParams }: { searchParams: Promis
             </tbody>
             <tfoot>
               <tr>
-                <th>סה&quot;כ</th><th>{int(total.visitors)}</th><th>{int(total.orders)}</th><th>{ils(total.onlineRevenue)}</th><th>{ils(total.storeRevenue)}</th>
+                <th>סה&quot;כ</th><th>{int(total.visitors)}</th><th>{int(total.orders)}</th><th>{ils(total.onlineRevenue)}</th><th>{ils(total.storeRevenue)}</th><th>{total.returns ? `−${ils(total.returns)}` : ils(0)}</th>
                 <th>{ils(total.revenue)}</th><th>{ils(total.net)}</th><th>{ils(total.cost)}</th><th>{ils(total.profit)}</th>
               </tr>
             </tfoot>
@@ -185,7 +186,7 @@ export default async function StatsPage({ searchParams }: { searchParams: Promis
           <b>איך מחושב:</b>
           <ul style={{ margin: "6px 0 0", paddingInlineStart: 20 }}>
             <li><b>כניסות:</b> כל מבקר נספר פעם אחת ביום, גם אם ראה כמה עמודים. כניסות שלך (כשאתה מחובר למערכת הניהול) ושל רובוטים לא נספרות. בלי עוגיות ובלי שמירת כתובת IP.</li>
-            <li><b>הכנסות:</b> הזמנות באתר ששולמו (כולל משלוח, בלי הזמנות שבוטלו או הוחזרו), ומכירות בחנות שנרשמו בכפתור &quot;נמכר בחנות&quot; במסך המלאי, לפי המחיר באתר בזמן המכירה.</li>
+            <li><b>הכנסות:</b> הזמנות באתר ששולמו (כולל משלוח, בלי הזמנות שבוטלו), ומכירות בחנות שנרשמו בכפתור &quot;נמכר בחנות&quot; במסך המלאי, לפי המחיר שנגבה. כסף שהוחזר ללקוחות (החזרה של חלק מהזמנה, או &quot;החזרה&quot; בחנות) יורד מההכנסות.</li>
             <li><b>רווח נקי אחרי קנייה:</b> ההכנסות בלי מע&quot;מ ({vat}%), פחות מחיר העלות של הסחורה שנמכרה. לא כולל הוצאות אחרות כמו שכירות, משלוחים או עמלות סליקה.</li>
           </ul>
         </section>

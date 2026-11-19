@@ -18,7 +18,10 @@ const ROLE = { OWNER: "מנהל ראשי", MANAGER: "מנהל", EDITOR: "עור�
 export default async function PanelLayout({ children }: { children: React.ReactNode }) {
   const me = await getCurrentAdmin();
   if (!me) redirect("/admin/login");
-  const newMessages = await db.contactMessage.count({ where: { status: "NEW" } });
+  const [newMessages, cancelRequests] = await Promise.all([
+    db.contactMessage.count({ where: { status: "NEW" } }),
+    db.cancelRequest.count({ where: { status: "PENDING" } }),
+  ]);
 
   return (
     <div className="admin-body admin-shell">
@@ -38,7 +41,7 @@ export default async function PanelLayout({ children }: { children: React.ReactN
             <button type="submit" className="link-btn">התנתקות</button>
           </form>
         </div>
-        {!me.mustChangePassword && <AdminNav newMessages={newMessages} />}
+        {!me.mustChangePassword && <AdminNav newMessages={newMessages} cancelRequests={cancelRequests} />}
         <div className="admin-user">
           מחובר כ: {me.displayName}
           <br />

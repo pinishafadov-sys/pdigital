@@ -61,6 +61,11 @@ export default async function OrderPage({ params }: { params: Promise<{ token: s
           {wa && <a href={wa} target="_blank" rel="noopener noreferrer" className="btn btn-ghost">שאלה על ההזמנה? וואטסאפ</a>}
           <Link href="/contact" className="btn btn-ghost">צור קשר</Link>
         </div>
+        {order.status !== "CANCELLED" && order.status !== "REFUNDED" && (
+          <p className="muted" style={{ textAlign: "center", marginTop: 14 }}>
+            רוצים לבטל את ההזמנה? <Link href={`/cancel?t=${token}`}>ביטול עסקה</Link>
+          </p>
+        )}
       </div>
     </main>
   );

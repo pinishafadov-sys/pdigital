@@ -9,6 +9,7 @@ const NAV = [
   { href: "/admin/search", label: "חיפוש", dot: "var(--text-on-dark-muted)" },
   { href: "/admin/orders", label: "הזמנות וחשבוניות", dot: "var(--brand-blue-on-dark)" },
   { href: "/admin/messages", label: "לקוחות יוצרים קשר", dot: "var(--brand-pink-on-dark)", badge: "messages" },
+  { href: "/admin/returns", label: "ביטולים והחזרות", dot: "var(--brand-pink-on-dark)", badge: "cancels" },
   { href: "/admin/products", label: "מוצרים", dot: "var(--brand-pink-on-dark)" },
   { href: "/admin/stock", label: "מלאי", dot: "var(--brand-orange)" },
   { href: "/admin/reorder", label: "המלצות להזמנה", dot: "var(--brand-pink-on-dark)" },
@@ -28,19 +29,19 @@ const NAV = [
   { href: "/admin/users", label: "משתמשים ואבטחה", dot: "var(--brand-purple-light-on-dark)" },
 ];
 
-export function AdminNav({ newMessages = 0 }: { newMessages?: number }) {
+export function AdminNav({ newMessages = 0, cancelRequests = 0 }: { newMessages?: number; cancelRequests?: number }) {
   const path = usePathname();
   return (
     <nav aria-label="ניווט ניהול" className="admin-nav">
       {(NAV as { href: string; label: string; dot: string; badge?: string }[]).map((n) => {
         const active = n.href === "/admin" ? path === "/admin" : path.startsWith(n.href);
-        const badge = n.badge === "messages" && newMessages > 0 ? newMessages : 0;
+        const badge = n.badge === "messages" ? newMessages : n.badge === "cancels" ? cancelRequests : 0;
         return (
           <Link key={n.href} href={n.href} aria-current={active ? "page" : undefined}>
             <span className="dot" style={{ background: n.dot }} />
             {n.label}
             {badge > 0 && (
-              <span className="nav-badge" aria-label={`${badge} פניות חדשות`}>
+              <span className="nav-badge" aria-label={n.badge === "cancels" ? `${badge} בקשות ביטול` : `${badge} פניות חדשות`}>
                 {badge}
               </span>
             )}
