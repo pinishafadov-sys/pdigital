@@ -1201,3 +1201,11 @@
   white-space: nowrap;
   overflow: visible;
 }
+
+.stock-price {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 0.875rem;
+  color: var(--text-muted);
+}

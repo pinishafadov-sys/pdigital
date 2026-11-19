@@ -10,7 +10,9 @@ const KINDS = [
   { value: "COUNT", label: "ספירה (כמות מדויקת)", sign: "=" },
 ];
 
-export function StockRow({ variantId, title, sku, stock, low }: { variantId: string; title: string; sku: string; stock: number; low: number }) {
+export function StockRow({
+  variantId, title, sku, stock, low, price,
+}: { variantId: string; title: string; sku: string; stock: number; low: number; price: string }) {
   const [state, action, pending] = useActionState(stockAction, undefined);
   const [kind, setKind] = useState("STORE_SALE");
   const cls = stock <= 0 ? "pink" : stock <= low ? "orange" : "green";
@@ -34,6 +36,13 @@ export function StockRow({ variantId, title, sku, stock, low }: { variantId: str
         </select>
         <input name="qty" type="number" min={kind === "COUNT" ? 0 : 1} defaultValue={kind === "COUNT" ? stock : 1} key={kind}
           className="input" style={{ width: 80 }} aria-label="כמות" inputMode="numeric" />
+        {kind === "STORE_SALE" && (
+          <label className="stock-price">
+            <span>₪ ליח&apos;</span>
+            <input name="price" className="input" defaultValue={price} inputMode="decimal" style={{ width: 90 }}
+              aria-label="מחיר ליחידה שנגבה בפועל, כולל מע״מ" title="המחיר שנגבה בפועל ליחידה (כולל מע״מ). מולא מראש המחיר באתר" />
+          </label>
+        )}
         <input name="note" className="input" placeholder="הערה (לא חובה)" maxLength={200} aria-label="הערה" />
         <button type="submit" className="btn btn-primary" disabled={pending}>
           {pending ? "..." : "עדכון"}

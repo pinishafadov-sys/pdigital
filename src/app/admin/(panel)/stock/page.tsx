@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { requireAdmin } from "@/lib/auth/session";
 import { db } from "@/lib/db";
-import { formatDateTime } from "@/lib/format";
+import { formatDateTime, formatPrice, priceInput } from "@/lib/format";
 import { STOCK_REASON_LABEL } from "@/lib/stock";
 import type { Prisma } from "@/generated/prisma/client";
 import { AdminTop } from "../AdminTop";
@@ -58,7 +58,7 @@ export default async function StockPage({ searchParams }: { searchParams: Promis
             <div className="stock-list">
               {variants.map((v) => (
                 <div key={v.id}>
-                  <StockRow variantId={v.id} title={title(v)} sku={v.sku} stock={v.stock} low={v.lowStockThreshold} />
+                  <StockRow variantId={v.id} title={title(v)} sku={v.sku} stock={v.stock} low={v.lowStockThreshold} price={priceInput(v.price)} />
                   <Link href={`/admin/stock?v=${v.id}#history`} className="muted" style={{ fontSize: 13 }}>היסטוריה ←</Link>
                 </div>
               ))}
@@ -85,7 +85,10 @@ export default async function StockPage({ searchParams }: { searchParams: Promis
                   <tr key={m.id}>
                     <td className="muted">{formatDateTime(m.createdAt)}</td>
                     <td>{title(m.variant)}</td>
-                    <td>{STOCK_REASON_LABEL[m.reason]}</td>
+                    <td>
+                      {STOCK_REASON_LABEL[m.reason]}
+                      {m.reason === "STORE_SALE" && m.unitPrice != null && <span className="muted"> · ₪{formatPrice(m.unitPrice)} ליח&apos;</span>}
+                    </td>
                     <td dir="ltr" style={{ color: m.change < 0 ? "var(--text-danger)" : "var(--text-success)", fontWeight: 600 }}>
                       {m.change > 0 ? `+${m.change}` : m.change}
                     </td>
