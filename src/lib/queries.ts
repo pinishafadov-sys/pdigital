@@ -257,25 +257,128 @@ export async function getRelatedAccessories(categoryId: string, excludeId: strin
 
 // ---------------------------------------------------------------- search
 
-export async function searchProducts(q: string, limit = 48) {
-  const term = q.trim().slice(0, 80);
-  if (term.length < 2) return [];
-  const rows = await db.product.findMany({
-    where: {
-      ...LISTED,
-      OR: [
-        { name: { contains: term, mode: "insensitive" } },
-        { shortDescription: { contains: term, mode: "insensitive" } },
-        { brand: { name: { contains: term, mode: "insensitive" } } },
-        { variants: { some: { sku: { contains: term, mode: "insensitive" } } } },
-        { category: { name: { contains: term, mode: "insensitive" } } },
-      ],
-    },
-    include: productInclude,
-    take: limit,
-  });
-  return rows.map(toCard);
+/** Spellings of a word as people type it: מק"ט / מק״ט, גאדג'ט / גאדג׳ט. */
+function spellings(w: string) {
+  return [
+    ...new Set([
+      w,
+      w.replace(/"/g, "״").replace(/'/g, "׳"),
+      w.replace(/״/g, '"').replace(/׳/g, "'"),
+      w.replace(/["'״׳]/g, ""),
+    ]),
+  ].filter((s) => s.length > 0);
 }
+
+/** Where one search word may appear for a product to match. */
+function wordMatch(w: string): Prisma.ProductWhereInput {
+  return {
+    OR: spellings(w).flatMap((s) => [
+      { name: { contains: s, mode: "insensitive" as const } },
+      { shortDescription: { contains: s, mode: "insensitive" as const } },
+      { brand: { name: { contains: s, mode: "insensitive" as const } } },
+      { category: { name: { contains: s, mode: "insensitive" as const } } },
+      { category: { parent: { name: { contains: s, mode: "insensitive" as const } } } },
+      { variants: { some: { isActive: true, OR: [{ sku: { contains: s, mode: "insensitive" as const } }, { name: { contains: s, mode: "insensitive" as const } }, { barcode: s }] } } },
+    ]),
+  };
+}
+
+/**
+ * Site search. Every word typed must appear somewhere in the product (name,
+ * brand, category, model, SKU or barcode), so "מטען סמסונג" finds Samsung
+ * chargers. Best matches first: the whole phrase in the name, then the name
+ * starting with the first word, then products whose name holds more of the words.
+ */
+export async function searchProducts(q: string, limit = 48) {
+  const term = q.replace(/\s+/g, " ").trim().slice(0, 80);
+  if (term.length < 2) return [];
+  const words = [...new Set(term.split(" "))].slice(0, 6);
+  const rows = await db.product.findMany({
+    where: { AND: [LISTED, ...words.map(wordMatch)] },
+    include: productInclude,
+    orderBy: { updatedAt: "desc" },
+    take: 200,
+  });
+  const lower = term.toLowerCase();
+  const score = (name: string) => {
+    const n = name.toLowerCase();
+    let s = 0;
+    if (n.includes(lower)) s += 100;
+    if (n.startsWith(words[0].toLowerCase())) s += 50;
+    for (const w of words) if (n.includes(w.toLowerCase())) s += 10;
+    return s;
+  };
+  return rows
+    .map((r) => ({ r, s: score(r.name) }))
+    .sort((a, b) => b.s - a.s)
+    .slice(0, limit)
+    .map(({ r }) => toCard(r));
+}
+
+/** Fixed site pages people may look for, with the words they might type. */
+const SITE_LINKS = [
+  { label: "צור קשר", href: "/contact", keywords: "קשר טלפון וואטסאפ ווצאפ מייל פנייה שאלה שירות לקוחות" },
+  { label: "עגלת הקניות", href: "/cart", keywords: "עגלה סל קניות תשלום קופה" },
+  { label: "החשבון שלי", href: "/account", keywords: "חשבון התחברות הרשמה פרופיל הזמנות שלי" },
+  { label: "מבצעים", href: "/search?tag=SALE", keywords: "מבצע הנחה הנחות סייל זול" },
+  { label: "חדש באתר", href: "/search?tag=NEW", keywords: "חדש חדשים חדשות" },
+  { label: "להיטים", href: "/search?tag=HOT", keywords: "להיט להיטים פופולרי נמכרים" },
+  { label: "מאמרים", href: "/articles", keywords: "מאמר בלוג מדריך מדריכים טיפים" },
+  { label: "מפת האתר", href: "/site-map", keywords: "מפה מפת אתר כל העמודים" },
+];
+
+const norm = (s: string) => s.toLowerCase().replace(/["'״׳]/g, "").trim();
+
+/** Categories, content pages, articles and site pages matching every word. */
+export async function searchLinks(q: string, limit = 5) {
+  const words = norm(q).split(/\s+/).filter(Boolean);
+  if (!words.length) return [];
+  const has = (text: string) => {
+    const t = norm(text);
+    return words.every((w) => t.includes(w));
+  };
+  const [cats, pages, articles] = await Promise.all([
+    db.category.findMany({
+      where: { isActive: true },
+      select: { name: true, slug: true, description: true, parent: { select: { name: true } } },
+    }),
+    getPublishedPages(),
+    db.article.findMany({
+      where: { isPublished: true, publishedAt: { lte: now() } },
+      select: { title: true, slug: true, excerpt: true },
+      orderBy: { publishedAt: "desc" },
+      take: 200,
+    }),
+  ]);
+  const links: { label: string; href: string; kind: string }[] = [
+    ...cats
+      .filter((c) => has(`${c.parent?.name ?? ""} ${c.name} ${c.description ?? ""}`))
+      .map((c) => ({ label: c.parent ? `${c.parent.name} › ${c.name}` : c.name, href: `/category/${c.slug}`, kind: "מחלקה" })),
+    ...SITE_LINKS.filter((l) => has(`${l.label} ${l.keywords}`)).map((l) => ({ label: l.label, href: l.href, kind: "עמוד" })),
+    ...pages.filter((p) => has(p.title)).map((p) => ({ label: p.title, href: `/pages/${p.slug}`, kind: "מידע" })),
+    ...articles
+      .filter((a) => has(`${a.title} ${a.excerpt ?? ""}`))
+      .map((a) => ({ label: a.title, href: `/articles/${a.slug}`, kind: "מאמר" })),
+  ];
+  return links.slice(0, limit);
+}
+
+/** Short lists for the live suggestions under the search box. */
+export async function searchSuggestions(q: string) {
+  const [items, links] = await Promise.all([searchProducts(q, 6), searchLinks(q)]);
+  return {
+    links,
+    products: items.map((p) => ({
+      slug: p.slug,
+      name: p.name,
+      category: p.categoryName,
+      imageUrl: p.imageUrl,
+      price: p.price,
+      compareAt: p.compareAt,
+    })),
+  };
+}
+export type SearchSuggestions = Awaited<ReturnType<typeof searchSuggestions>>;
 
 export async function productsByTag(tag: ProductTag, limit = 96) {
   const rows = await db.product.findMany({

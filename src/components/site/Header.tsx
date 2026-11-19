@@ -1,9 +1,10 @@
 import Link from "next/link";
 import { Logo } from "@/components/Logo";
-import { IconPhone, IconSearch, IconUser, IconWhatsapp } from "@/components/Icons";
+import { IconPhone, IconUser, IconWhatsapp } from "@/components/Icons";
 import { getSettings, telLink, whatsappLink } from "@/lib/settings";
 import { getNavCategories } from "@/lib/queries";
 import { CartLink } from "./CartBits";
+import { SearchBox } from "./SearchBox";
 
 function Bubble({ href, label, cls, children }: { href: string | null; label: string; cls: string; children: React.ReactNode }) {
   const inner = (
@@ -45,15 +46,7 @@ export async function Header() {
           </Bubble>
         </div>
 
-        <form action="/search" method="get" role="search" className="header-search">
-          <label htmlFor="site-search" className="visually-hidden">
-            חיפוש מוצר
-          </label>
-          <input id="site-search" type="search" name="q" placeholder="חיפוש מוצר..." maxLength={80} autoComplete="off" />
-          <button type="submit" aria-label="חיפוש">
-            <IconSearch size={24} />
-          </button>
-        </form>
+        <SearchBox />
 
         <div className="header-actions">
           <div className="mobile-contacts">
