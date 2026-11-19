@@ -113,7 +113,7 @@ export function SearchBox() {
         id="site-search"
         type="search"
         name="q"
-        placeholder="מה תרצו למצוא? מוצר, מותג, דגם או עמוד..."
+        placeholder="מה תרצו למצוא?"
         maxLength={80}
         autoComplete="off"
         role="combobox"

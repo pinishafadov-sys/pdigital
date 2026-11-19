@@ -29,7 +29,7 @@ export default async function SearchPage({ searchParams }: { searchParams: Searc
         {!tagKey && (
           <form action="/search" method="get" role="search" className="header-search" style={{ maxWidth: 640, marginBottom: 20 }}>
             <label htmlFor="q2" className="visually-hidden">חיפוש מוצר</label>
-            <input id="q2" type="search" name="q" defaultValue={term} placeholder="חיפוש לפי מוצר, מותג, דגם או עמוד..." maxLength={80} />
+            <input id="q2" type="search" name="q" defaultValue={term} placeholder="מה תרצו למצוא?" maxLength={80} />
             <button type="submit" className="btn btn-primary">חיפוש</button>
           </form>
         )}
