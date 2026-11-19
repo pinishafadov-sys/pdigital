@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { IconBox } from "@/components/Icons";
+import { SmartImage } from "@/components/SmartImage";
 
 export function Gallery({ images, name }: { images: { url: string; alt: string }[]; name: string }) {
   const [i, setI] = useState(0);
@@ -10,8 +11,8 @@ export function Gallery({ images, name }: { images: { url: string; alt: string }
     <div className="panel gallery">
       <div className="gallery-main">
         {cur ? (
-          // eslint-disable-next-line @next/next/no-img-element
-          <img src={cur.url} alt={cur.alt || name} width={600} height={600} fetchPriority="high" />
+          // Main product photo = the page's largest element, so it loads first.
+          <SmartImage src={cur.url} alt={cur.alt || name} width={600} height={600} priority={i === 0} sizes="(max-width: 900px) 92vw, 460px" />
         ) : (
           <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 8 }}>
             <IconBox size={72} />
@@ -30,8 +31,7 @@ export function Gallery({ images, name }: { images: { url: string; alt: string }
               aria-label={`תמונה ${idx + 1}`}
               onClick={() => setI(idx)}
             >
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src={img.url} alt="" loading="lazy" width={76} height={76} />
+              <SmartImage src={img.url} alt="" width={76} height={76} sizes="76px" />
             </button>
           ))}
         </div>

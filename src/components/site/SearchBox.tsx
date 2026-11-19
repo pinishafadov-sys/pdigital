@@ -3,6 +3,7 @@
 import { useRouter } from "next/navigation";
 import { useEffect, useId, useRef, useState } from "react";
 import { IconSearch } from "@/components/Icons";
+import { SmartImage } from "@/components/SmartImage";
 import { formatPrice } from "@/lib/format";
 import type { SearchSuggestions } from "@/lib/queries";
 
@@ -150,8 +151,7 @@ export function SearchBox() {
                 <li key={p.slug} {...opt(i)} className={active === i ? "active" : undefined}>
                   <span className="sp-img">
                     {p.imageUrl && (
-                      // eslint-disable-next-line @next/next/no-img-element
-                      <img src={p.imageUrl} alt="" width={48} height={48} />
+                      <SmartImage src={p.imageUrl} alt="" width={48} height={48} sizes="48px" />
                     )}
                   </span>
                   <span className="sp-text">

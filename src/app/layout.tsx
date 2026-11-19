@@ -54,6 +54,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
   // No analytics or tracking pixels on admin pages.
   const gaId = !isAdmin && /^G-[A-Z0-9]+$/.test(s.seo.gaId) ? s.seo.gaId : null;
   const gtmId = !isAdmin && /^GTM-[A-Z0-9]+$/.test(s.seo.gtmId) ? s.seo.gtmId : null;
+  const fbPixel = !isAdmin && !isPlaceholder(s.seo.facebookPixel) && /^\d+$/.test(s.seo.facebookPixel) ? s.seo.facebookPixel : null;
 
   return (
     <html
@@ -70,30 +71,26 @@ export default async function RootLayout({ children }: { children: React.ReactNo
             __html: `try{var a=JSON.parse(localStorage.getItem('pd-a11y')||'{}');var d=document.documentElement;if(a.fs)d.style.setProperty('--a11y-scale',a.fs);['contrast','links','readable','still'].forEach(function(k){if(a[k])d.classList.add('a11y-'+k)})}catch(e){}`,
           }}
         />
-        {gtmId && (
+        {/*
+          Tracking scripts (Tag Manager, Analytics, Facebook) load only after the page has
+          finished showing, when the browser is idle, so they never slow down what the
+          visitor (and Google's speed test) sees. Events are queued until then.
+        */}
+        {(gtmId || gaId || fbPixel) && (
           <script
             nonce={nonce}
             dangerouslySetInnerHTML={{
-              __html: `(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],j=d.createElement(s);j.async=true;j.src='https://www.googletagmanager.com/gtm.js?id='+i;var n=d.querySelector('[nonce]');n&&j.setAttribute('nonce',n.nonce||n.getAttribute('nonce'));f.parentNode.insertBefore(j,f);})(window,document,'script','dataLayer','${gtmId}');`,
-            }}
-          />
-        )}
-        {gaId && (
-          <>
-            <script nonce={nonce} async src={`https://www.googletagmanager.com/gtag/js?id=${gaId}`} />
-            <script
-              nonce={nonce}
-              dangerouslySetInnerHTML={{
-                __html: `window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag('js',new Date());gtag('config','${gaId}',{anonymize_ip:true});`,
-              }}
-            />
-          </>
-        )}
-        {!isAdmin && !isPlaceholder(s.seo.facebookPixel) && /^\d+$/.test(s.seo.facebookPixel) && (
-          <script
-            nonce={nonce}
-            dangerouslySetInnerHTML={{
-              __html: `!function(f,b,e,v,n,t,s){if(f.fbq)return;n=f.fbq=function(){n.callMethod?n.callMethod.apply(n,arguments):n.queue.push(arguments)};if(!f._fbq)f._fbq=n;n.push=n;n.loaded=!0;n.version='2.0';n.queue=[];t=b.createElement(e);t.async=!0;t.src=v;s=b.getElementsByTagName(e)[0];s.parentNode.insertBefore(t,s)}(window,document,'script','https://connect.facebook.net/en_US/fbevents.js');fbq('init','${s.seo.facebookPixel}');fbq('track','PageView');`,
+              __html: [
+                `(function(w,d){function idle(f){var r=function(){(w.requestIdleCallback||function(c){setTimeout(c,300)})(f,{timeout:4000})};d.readyState==='complete'?r():w.addEventListener('load',r)}`,
+                `function load(src){var j=d.createElement('script');j.async=true;j.src=src;var n=d.querySelector('script[nonce]');n&&j.setAttribute('nonce',n.nonce||n.getAttribute('nonce'));d.head.appendChild(j)}`,
+                `w.dataLayer=w.dataLayer||[];`,
+                gtmId ? `w.dataLayer.push({'gtm.start':new Date().getTime(),event:'gtm.js'});idle(function(){load('https://www.googletagmanager.com/gtm.js?id=${gtmId}')});` : "",
+                gaId ? `w.gtag=function(){w.dataLayer.push(arguments)};gtag('js',new Date());gtag('config','${gaId}',{anonymize_ip:true});idle(function(){load('https://www.googletagmanager.com/gtag/js?id=${gaId}')});` : "",
+                fbPixel
+                  ? `var n=w.fbq=function(){n.callMethod?n.callMethod.apply(n,arguments):n.queue.push(arguments)};w._fbq=n;n.push=n;n.loaded=true;n.version='2.0';n.queue=[];fbq('init','${fbPixel}');fbq('track','PageView');idle(function(){load('https://connect.facebook.net/en_US/fbevents.js')});`
+                  : "",
+                `})(window,document);`,
+              ].join(""),
             }}
           />
         )}

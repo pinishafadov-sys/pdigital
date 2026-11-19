@@ -3,7 +3,7 @@
 // Server actions for categories, brands, product types, banners, pages, articles and coupons.
 // Every action re-checks the admin session and role, validates input, and writes an audit entry.
 
-import { revalidatePath } from "next/cache";
+import { refreshSite } from "@/lib/cache";
 import { redirect } from "next/navigation";
 import { audit, requireAdmin } from "@/lib/auth/session";
 import { db } from "@/lib/db";
@@ -13,7 +13,7 @@ import {
 import { changeOrderStatus } from "@/lib/orders";
 import { saveImage } from "@/lib/upload";
 
-const refresh = () => revalidatePath("/", "layout");
+const refresh = () => refreshSite();
 const id = (fd: FormData) => str(fd, "id", { max: 40 });
 
 // ---------------------------------------------------------------- categories
@@ -264,6 +264,6 @@ export async function updateOrder(_p: ActionState, fd: FormData): Promise<Action
       internalNotes: optStr(fd, "internalNotes", 2000),
     });
     await audit(me.id, `order_${status.toLowerCase()}`, "Order", order.id);
-    revalidatePath("/", "layout");
+    refreshSite();
   });
 }

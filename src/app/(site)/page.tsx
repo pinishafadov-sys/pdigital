@@ -4,6 +4,7 @@ import { LogoMark } from "@/components/Logo";
 import { DealsTabs } from "@/components/site/DealsTabs";
 import { PlaceholderCard, ProductCard } from "@/components/site/ProductCard";
 import { TrustStrip } from "@/components/site/Shared";
+import { SmartImage } from "@/components/SmartImage";
 import { getHomeData, getNavCategories } from "@/lib/queries";
 import { getSettings } from "@/lib/settings";
 
@@ -21,12 +22,11 @@ export default async function HomePage() {
     <main>
       {/* ---------- hero + side banners */}
       <section className="container hero" aria-label="מבצעים מובילים">
-        <div
-          className={`hero-main ${hero?.imageUrl ? "has-image" : ""}`}
-          style={hero?.imageUrl ? { backgroundImage: `url(${JSON.stringify(hero.imageUrl)})` } : undefined}
-          role={hero?.imageUrl ? "img" : undefined}
-          aria-label={hero?.imageUrl ? hero.alt : undefined}
-        >
+        <div className={`hero-main ${hero?.imageUrl ? "has-image" : ""}`}>
+          {hero?.imageUrl && (
+            // The biggest image on the page: loads first (this is what Google measures as LCP).
+            <SmartImage src={hero.imageUrl} alt={hero.alt ?? ""} fill priority sizes="(max-width: 900px) 100vw, 66vw" className="hero-bg" />
+          )}
           <div className="hero-copy">
             <span className="hero-pill">הכל באתר אחד!</span>
             <h1>{hero?.title ?? "הטכנולוגיה שאתם אוהבים, במקום אחד"}</h1>
@@ -48,8 +48,8 @@ export default async function HomePage() {
                 key={i}
                 href={b?.linkUrl ?? d.href}
                 className={`side-banner ${d.cls}`}
-                style={b?.imageUrl ? { backgroundImage: `url(${JSON.stringify(b.imageUrl)})` } : undefined}
               >
+                {b?.imageUrl && <SmartImage src={b.imageUrl} alt="" fill priority sizes="(max-width: 900px) 100vw, 33vw" className="banner-bg" />}
                 <span className="eyebrow">{b?.subtitle ?? d.eyebrow}</span>
                 <span className="title">{b?.title ?? d.title}</span>
                 <span className="cta">{b?.buttonText ?? "לצפייה"} ←</span>
@@ -70,8 +70,7 @@ export default async function HomePage() {
             <Link key={c.id} href={`/category/${c.slug}`} className="dept">
               <span className="dept-circle">
                 {c.imageUrl ? (
-                  // eslint-disable-next-line @next/next/no-img-element
-                  <img src={c.imageUrl} alt="" loading="lazy" width={180} height={180} />
+                  <SmartImage src={c.imageUrl} alt="" width={180} height={180} sizes="(max-width: 600px) 30vw, 180px" />
                 ) : (
                   <DeptIcon slug={c.slug} />
                 )}
@@ -126,8 +125,7 @@ export default async function HomePage() {
             (b) => (
               <div key={b.id} className="brand-tile">
                 {b.logoUrl ? (
-                  // eslint-disable-next-line @next/next/no-img-element
-                  <img src={b.logoUrl} alt={b.name} loading="lazy" />
+                  <SmartImage src={b.logoUrl} alt={b.name} width={160} height={64} sizes="160px" style={{ width: "auto", height: "auto" }} />
                 ) : (
                   b.name
                 )}

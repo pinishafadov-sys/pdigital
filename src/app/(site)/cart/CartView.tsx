@@ -1,5 +1,6 @@
 "use client";
 
+import { SmartImage } from "@/components/SmartImage";
 import Link from "next/link";
 import { setQty, useCart } from "@/lib/cart";
 import { formatPrice } from "@/lib/format";
@@ -27,8 +28,7 @@ export function CartView({ freeShippingFrom }: { freeShippingFrom: number | null
         {items.map((i) => (
           <div key={i.variantId} className="cart-line">
             {i.imageUrl ? (
-              // eslint-disable-next-line @next/next/no-img-element
-              <img src={i.imageUrl} alt="" width={72} height={72} />
+              <SmartImage src={i.imageUrl} alt="" width={72} height={72} sizes="72px" />
             ) : (
               <span className="ph" />
             )}

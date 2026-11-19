@@ -1,5 +1,6 @@
 import "server-only";
 import { cache } from "react";
+import { cached } from "@/lib/cache";
 import { db } from "@/lib/db";
 import type { Prisma, ProductTag } from "@/generated/prisma/client";
 
@@ -79,12 +80,12 @@ function toCard(p: ProductRow): ProductCardData {
 
 // ---------------------------------------------------------------- navigation
 
-export const getNavCategories = cache(async () =>
+export const getNavCategories = cache(cached(async () =>
   db.category.findMany({
     where: { isActive: true, parentId: null },
     orderBy: [{ sortOrder: "asc" }, { name: "asc" }],
     select: { id: true, name: true, slug: true, imageUrl: true, showOnHome: true },
-  }),
+  }), "nav"),
 );
 
 // ---------------------------------------------------------------- home
@@ -100,7 +101,7 @@ function activeBanner(placement: "HOME_HERO" | "HOME_SIDE" | "HOME_CLUB" | "CATE
   } satisfies Prisma.BannerWhereInput;
 }
 
-export async function getHomeData() {
+export const getHomeData = cache(cached(async () => {
   const [hero, side, deals, fresh, brands] = await Promise.all([
     db.banner.findFirst({ where: activeBanner("HOME_HERO"), orderBy: { sortOrder: "asc" } }),
     db.banner.findMany({ where: activeBanner("HOME_SIDE"), orderBy: { sortOrder: "asc" }, take: 2 }),
@@ -119,7 +120,7 @@ export async function getHomeData() {
     db.brand.findMany({ where: { showInBrandStrip: true }, orderBy: { sortOrder: "asc" } }),
   ]);
   return { hero, side, deals: deals.map(toCard), fresh: fresh.map(toCard), brands };
-}
+}, "home"));
 
 // ---------------------------------------------------------------- category
 
@@ -135,26 +136,38 @@ export type CategoryFilters = {
   limit: number;
 };
 
-export const getCategoryBySlug = cache(async (slug: string) =>
-  db.category.findFirst({
-    where: { slug, isActive: true },
-    include: {
-      parent: true,
-      children: { where: { isActive: true }, orderBy: [{ isAccessories: "asc" }, { sortOrder: "asc" }] },
-    },
-  }),
+export const getCategoryBySlug = cache(
+  cached(
+    async (slug: string) =>
+      db.category.findFirst({
+        where: { slug, isActive: true },
+        include: {
+          parent: true,
+          children: { where: { isActive: true }, orderBy: [{ isAccessories: "asc" }, { sortOrder: "asc" }] },
+        },
+      }),
+    "category",
+  ),
 );
+
+/** All listed products of a category (cached); filters and sorting run on them in memory. */
+const categoryRows = cached(async (scopeIds: string[], childIds: string[]) => {
+  const [rows, acc] = await Promise.all([
+    db.product.findMany({
+      where: { ...LISTED, categoryId: { in: scopeIds } },
+      include: { ...productInclude, productType: { include: { specFields: { where: { isFilterable: true }, orderBy: { sortOrder: "asc" } } } } },
+    }),
+    db.category.findMany({ where: { id: { in: childIds }, isAccessories: true }, select: { id: true } }),
+  ]);
+  return { rows, accessoryIds: acc.map((c) => c.id) };
+}, "category-rows");
 
 export async function getCategoryProducts(categoryId: string, childIds: string[], f: CategoryFilters) {
   const scopeIds = f.sub ? [f.sub] : [categoryId, ...childIds];
-  const rows = await db.product.findMany({
-    where: { ...LISTED, categoryId: { in: scopeIds } },
-    include: { ...productInclude, productType: { include: { specFields: { where: { isFilterable: true }, orderBy: { sortOrder: "asc" } } } } },
-  });
+  const data = await categoryRows(scopeIds, childIds);
+  const rows = data.rows;
   // Accessories stay out of the main listing unless their sub-category is chosen.
-  const accessoryIds = new Set(
-    (await db.category.findMany({ where: { id: { in: childIds }, isAccessories: true }, select: { id: true } })).map((c) => c.id),
-  );
+  const accessoryIds = new Set(data.accessoryIds);
   const scoped = f.sub ? rows : rows.filter((r) => !accessoryIds.has(r.categoryId));
   const all = scoped.map((r) => ({ card: toCard(r), row: r }));
 
@@ -220,21 +233,25 @@ export async function getCategoryProducts(categoryId: string, childIds: string[]
 
 // ---------------------------------------------------------------- product
 
-export const getProduct = cache(async (slug: string) =>
-  db.product.findFirst({
-    where: { slug, status: "ACTIVE" },
-    include: {
-      category: { include: { parent: true } },
-      brand: true,
-      images: { orderBy: { sortOrder: "asc" } },
-      variants: { where: { isActive: true }, orderBy: [{ sortOrder: "asc" }, { price: "asc" }] },
-      specValues: { include: { specField: true } },
-      accessories: {
-        orderBy: { sortOrder: "asc" },
-        include: { accessory: { include: productInclude } },
-      },
-    },
-  }),
+export const getProduct = cache(
+  cached(
+    async (slug: string) =>
+      db.product.findFirst({
+        where: { slug, status: "ACTIVE" },
+        include: {
+          category: { include: { parent: true } },
+          brand: true,
+          images: { orderBy: { sortOrder: "asc" } },
+          variants: { where: { isActive: true }, orderBy: [{ sortOrder: "asc" }, { price: "asc" }] },
+          specValues: { include: { specField: true } },
+          accessories: {
+            orderBy: { sortOrder: "asc" },
+            include: { accessory: { include: productInclude } },
+          },
+        },
+      }),
+    "product",
+  ),
 );
 
 export function cardsFromAccessories(rows: { accessory: ProductRow }[]) {
@@ -244,7 +261,7 @@ export function cardsFromAccessories(rows: { accessory: ProductRow }[]) {
     .filter((c) => c.inStock);
 }
 
-export async function getRelatedAccessories(categoryId: string, excludeId: string) {
+export const getRelatedAccessories = cached(async (categoryId: string, excludeId: string) => {
   const acc = await db.category.findFirst({ where: { parentId: categoryId, isAccessories: true } });
   if (!acc) return [];
   const rows = await db.product.findMany({
@@ -253,7 +270,7 @@ export async function getRelatedAccessories(categoryId: string, excludeId: strin
     take: 4,
   });
   return rows.map(toCard);
-}
+}, "related-accessories");
 
 // ---------------------------------------------------------------- search
 
@@ -392,20 +409,28 @@ export async function productsByTag(tag: ProductTag, limit = 96) {
 
 // ---------------------------------------------------------------- content
 
-export const getPage = cache(async (slug: string) => db.page.findFirst({ where: { slug, isPublished: true } }));
+export const getPage = cache(cached(async (slug: string) => db.page.findFirst({ where: { slug, isPublished: true } }), "page"));
 
-export const getPublishedPages = cache(async () =>
-  db.page.findMany({ where: { isPublished: true }, select: { slug: true, title: true, updatedAt: true }, orderBy: { title: "asc" } }),
+export const getPublishedPages = cache(
+  cached(
+    async () => db.page.findMany({ where: { isPublished: true }, select: { slug: true, title: true, updatedAt: true }, orderBy: { title: "asc" } }),
+    "pages",
+  ),
 );
 
-export const getArticles = cache(async (take = 30) =>
-  db.article.findMany({
-    where: { isPublished: true, publishedAt: { lte: now() } },
-    orderBy: { publishedAt: "desc" },
-    take,
-  }),
+// Scheduled articles appear within a few minutes of their publish time (cache refresh).
+export const getArticles = cache(
+  cached(
+    async (take: number = 30) =>
+      db.article.findMany({
+        where: { isPublished: true, publishedAt: { lte: now() } },
+        orderBy: { publishedAt: "desc" },
+        take,
+      }),
+    "articles",
+  ),
 );
 
-export const getArticle = cache(async (slug: string) =>
-  db.article.findFirst({ where: { slug, isPublished: true, publishedAt: { lte: now() } } }),
+export const getArticle = cache(
+  cached(async (slug: string) => db.article.findFirst({ where: { slug, isPublished: true, publishedAt: { lte: now() } } }), "article"),
 );

@@ -2,7 +2,7 @@
 
 // Cancellation requests from customers, and partial returns of paid orders.
 
-import { revalidatePath } from "next/cache";
+import { refreshSite } from "@/lib/cache";
 import { redirect } from "next/navigation";
 import { audit, requireAdmin } from "@/lib/auth/session";
 import { db } from "@/lib/db";
@@ -48,7 +48,7 @@ export async function handleCancelRequest(_p: ActionState, fd: FormData): Promis
     });
 
     await audit(me.id, `cancel_request_${decision.toLowerCase()}`, "Order", order.id);
-    revalidatePath("/", "layout");
+    refreshSite();
     // The request box disappears after handling, so the result is shown at the top of the order page.
     redirect(`/admin/orders/${order.id}?done=${ok ? "cancel-approved" : "cancel-rejected"}`);
   });
@@ -68,7 +68,7 @@ export async function returnItemsAction(_p: ActionState, fd: FormData): Promise<
       userId: me.id,
     });
     await audit(me.id, "order_items_returned", "Order", orderId);
-    revalidatePath("/", "layout");
+    refreshSite();
     if (res.all) redirect(`/admin/orders/${orderId}?done=returned-all`);
     return {
       ok: true,

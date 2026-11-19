@@ -1,5 +1,6 @@
 import "server-only";
 import { cache } from "react";
+import { cached } from "@/lib/cache";
 import { db } from "@/lib/db";
 
 // All editable site-wide settings. The admin "הגדרות" screen is generated from this list,
@@ -91,8 +92,11 @@ export type SettingGroup = keyof typeof SETTING_GROUPS;
 type GroupValues<G extends SettingGroup> = Record<(typeof SETTING_GROUPS)[G]["fields"][number]["key"], string>;
 export type Settings = { [G in SettingGroup]: GroupValues<G> };
 
+// Settings are read on every page, so they come from the site cache (cleared on save).
+const settingRows = cached(async () => db.siteSetting.findMany({ select: { key: true, value: true } }), "settings");
+
 export const getSettings = cache(async (): Promise<Settings> => {
-  const rows = await db.siteSetting.findMany();
+  const rows = await settingRows();
   const stored = Object.fromEntries(rows.map((r) => [r.key, r.value as Record<string, string>]));
   const result = {} as Record<string, Record<string, string>>;
   for (const [group, def] of Object.entries(SETTING_GROUPS)) {

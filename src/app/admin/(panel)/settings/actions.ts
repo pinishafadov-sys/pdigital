@@ -1,6 +1,6 @@
 "use server";
 
-import { revalidatePath } from "next/cache";
+import { refreshSite } from "@/lib/cache";
 import { audit, requireAdmin } from "@/lib/auth/session";
 import { db } from "@/lib/db";
 import { FormError, handle, type ActionState } from "@/lib/form";
@@ -32,6 +32,6 @@ export async function saveSettings(_p: ActionState, fd: FormData): Promise<Actio
     }
     await db.siteSetting.upsert({ where: { key: group }, update: { value }, create: { key: group, value } });
     await audit(me.id, "settings_saved", "SiteSetting", group);
-    revalidatePath("/", "layout");
+    refreshSite();
   });
 }

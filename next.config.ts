@@ -22,8 +22,20 @@ const securityHeaders = [
 const nextConfig: NextConfig = {
   reactStrictMode: true,
   poweredByHeader: false,
+  images: {
+    // Modern formats first: AVIF is ~50% smaller than JPEG, WebP ~30%.
+    formats: ["image/avif", "image/webp"],
+    // Uploaded files get a new random name on every upload, so they never change.
+    minimumCacheTTL: 31536000,
+    deviceSizes: [360, 480, 640, 828, 1080, 1280, 1600],
+    imageSizes: [48, 76, 96, 128, 180, 220, 320],
+  },
   async headers() {
-    return [{ source: "/:path*", headers: securityHeaders }];
+    return [
+      { source: "/:path*", headers: securityHeaders },
+      // Uploaded images never change (random file names), so browsers keep them for a year.
+      { source: "/uploads/:path*", headers: [{ key: "Cache-Control", value: "public, max-age=31536000, immutable" }] },
+    ];
   },
   experimental: {
     serverActions: { bodySizeLimit: "6mb" }, // image uploads (max 5MB each)

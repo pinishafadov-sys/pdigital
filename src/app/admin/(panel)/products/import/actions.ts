@@ -1,6 +1,6 @@
 "use server";
 
-import { revalidatePath } from "next/cache";
+import { refreshSite } from "@/lib/cache";
 import { audit, requireAdmin } from "@/lib/auth/session";
 import { commitImport, planImport, readImportFile, type ImportPlan } from "@/lib/product-import";
 
@@ -21,7 +21,7 @@ export async function importAction(_prev: ImportState, fd: FormData): Promise<Im
     if (plan.creates + plan.updates === 0) return { stage: "error", error: "אין שורות תקינות לייבוא" };
     const res = await commitImport(plan, me.id);
     await audit(me.id, "products_imported", "Product", `${res.created}+${res.updated}`);
-    revalidatePath("/", "layout");
+    refreshSite();
     return { stage: "done", ...res };
   } catch (e) {
     console.error(e);

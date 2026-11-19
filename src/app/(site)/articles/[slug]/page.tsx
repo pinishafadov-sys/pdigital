@@ -1,3 +1,4 @@
+import { SmartImage } from "@/components/SmartImage";
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { Breadcrumbs, JsonLd } from "@/components/site/Shared";
@@ -49,8 +50,15 @@ export default async function ArticlePage({ params }: { params: Params }) {
             </p>
           )}
           {a.coverImageUrl && (
-            // eslint-disable-next-line @next/next/no-img-element
-            <img src={a.coverImageUrl} alt={a.coverImageAlt ?? ""} style={{ borderRadius: 12, margin: "16px 0", width: "100%" }} />
+            <SmartImage
+              src={a.coverImageUrl}
+              alt={a.coverImageAlt ?? ""}
+              width={1200}
+              height={675}
+              priority
+              sizes="(max-width: 800px) 92vw, 760px"
+              style={{ borderRadius: 12, margin: "16px 0", width: "100%", height: "auto" }}
+            />
           )}
           <RichText text={a.body} />
         </article>

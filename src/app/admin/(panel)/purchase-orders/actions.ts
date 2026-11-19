@@ -4,6 +4,7 @@
 // role, validates input, and writes an audit entry. Receiving goods adds stock
 // through changeStock, so it shows in the stock history like any other restock.
 
+import { refreshSite } from "@/lib/cache";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { audit, requireAdmin } from "@/lib/auth/session";
@@ -13,7 +14,7 @@ import { reorderReport } from "@/lib/reorder";
 import { changeStock } from "@/lib/stock";
 
 const id = (fd: FormData, key = "id") => str(fd, key, { max: 40 });
-const refresh = () => revalidatePath("/", "layout");
+const refresh = () => refreshSite();
 
 // ---------------------------------------------------------------- suppliers
 

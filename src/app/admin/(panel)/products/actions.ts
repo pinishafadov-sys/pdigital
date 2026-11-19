@@ -1,6 +1,6 @@
 "use server";
 
-import { revalidatePath } from "next/cache";
+import { refreshSite } from "@/lib/cache";
 import { redirect } from "next/navigation";
 import { audit, requireAdmin } from "@/lib/auth/session";
 import { db } from "@/lib/db";
@@ -125,7 +125,7 @@ export async function saveProduct(_prev: ActionState, fd: FormData): Promise<Act
       return pid;
     });
     await audit(me.id, id ? "product_updated" : "product_created", "Product", savedId);
-    revalidatePath("/", "layout");
+    refreshSite();
   });
   if (result?.ok && !str(fd, "id", { max: 40 })) redirect(`/admin/products/${savedId}?created=1`);
   return result;
@@ -139,7 +139,7 @@ export async function deleteProduct(fd: FormData) {
   if (hasOrders) await db.product.update({ where: { id }, data: { status: "ARCHIVED" } });
   else await db.product.delete({ where: { id } });
   await audit(me.id, hasOrders ? "product_archived" : "product_deleted", "Product", id);
-  revalidatePath("/", "layout");
+  refreshSite();
   redirect("/admin/products");
 }
 
@@ -150,7 +150,7 @@ export async function quickStock(fd: FormData) {
   if (!Number.isInteger(stock) || stock < 0) return;
   await setStock(id, stock, { userId: me.id, note: "עדכון מהיר מרשימת המוצרים" });
   await audit(me.id, "stock_updated", "ProductVariant", id);
-  revalidatePath("/", "layout");
+  refreshSite();
 }
 
 /** In-store sale / restock / return / manual count from the stock screen. */
@@ -179,7 +179,7 @@ export async function stockAction(_prev: ActionState, fd: FormData): Promise<Act
       });
     }
     await audit(me.id, `stock_${kind.toLowerCase()}`, "ProductVariant", variantId);
-    revalidatePath("/", "layout");
+    refreshSite();
     return { ok: true, message: `עודכן. במלאי עכשיו: ${after}` };
   });
 }

@@ -1,3 +1,4 @@
+import { SmartImage } from "@/components/SmartImage";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { LogoMark } from "@/components/Logo";
@@ -27,8 +28,7 @@ export default async function ArticlesPage() {
               <Link key={a.id} href={`/articles/${a.slug}`} className="panel article-card">
                 <div className="cover">
                   {a.coverImageUrl ? (
-                    // eslint-disable-next-line @next/next/no-img-element
-                    <img src={a.coverImageUrl} alt={a.coverImageAlt ?? ""} loading="lazy" width={400} height={225} />
+                    <SmartImage src={a.coverImageUrl} alt={a.coverImageAlt ?? ""} width={400} height={225} sizes="(max-width: 700px) 92vw, 400px" />
                   ) : (
                     <LogoMark size={60} onDark />
                   )}

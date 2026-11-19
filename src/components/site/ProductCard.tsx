@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { IconBox } from "@/components/Icons";
+import { SmartImage } from "@/components/SmartImage";
 import { discountPercent, formatPrice } from "@/lib/format";
 import type { ProductCardData } from "@/lib/queries";
 import { AddToCartButton } from "./CartBits";
@@ -33,8 +34,7 @@ export function ProductCard({ p, variant = "grid" }: { p: ProductCardData; varia
       </div>
       <div className="pcard-img">
         {p.imageUrl ? (
-          // eslint-disable-next-line @next/next/no-img-element
-          <img src={p.imageUrl} alt={p.imageAlt} loading="lazy" width={220} height={220} />
+          <SmartImage src={p.imageUrl} alt={p.imageAlt} width={220} height={220} sizes="(max-width: 600px) 45vw, 220px" />
         ) : (
           <>
             <IconBox size={40} />

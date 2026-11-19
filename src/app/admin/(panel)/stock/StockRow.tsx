@@ -34,10 +34,10 @@ export function StockRow({
             </option>
           ))}
         </select>
-        <input name="qty" type="number" min={kind === "COUNT" ? 0 : 1} defaultValue={kind === "COUNT" ? stock : 1} key={kind}
+        <input name="qty" type="number" min={kind === "COUNT" ? 0 : 1} defaultValue={kind === "COUNT" ? stock : 1} key={`qty-${kind}`}
           className="input" style={{ width: 80 }} aria-label="כמות" inputMode="numeric" />
         {(kind === "STORE_SALE" || kind === "RETURN") && (
-          <label className="stock-price" key={kind}>
+          <label className="stock-price" key={`price-${kind}`}>
             <span>{kind === "RETURN" ? "₪ הוחזר ליח'" : "₪ ליח'"}</span>
             <input name="price" className="input" defaultValue={price} inputMode="decimal" style={{ width: 90 }}
               aria-label={kind === "RETURN" ? "סכום שהוחזר ללקוח ליחידה, כולל מע״מ" : "מחיר ליחידה שנגבה בפועל, כולל מע״מ"}

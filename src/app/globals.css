@@ -2397,3 +2397,18 @@ html.a11y-still *::after {
 .search-links a:hover {
   border-color: var(--brand-orange);
 }
+
+/* ------------------------------------------------------------------ banner images (real <img> so they load first) */
+.hero-main .hero-bg,
+.side-banner .banner-bg {
+  object-fit: cover;
+  z-index: -2;
+}
+
+.hero-main.has-image::before {
+  display: none;
+}
+
+.side-banner {
+  isolation: isolate;
+}
