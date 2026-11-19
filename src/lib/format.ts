@@ -1,11 +1,9 @@
-const priceFmt = new Intl.NumberFormat("he-IL", {
-  minimumFractionDigits: 0,
-  maximumFractionDigits: 2,
-});
+const wholeFmt = new Intl.NumberFormat("he-IL", { maximumFractionDigits: 0 });
+const centsFmt = new Intl.NumberFormat("he-IL", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 
-/** 4990 agorot -> "49.9" */
+/** 4990 agorot -> "49.90", 5000 -> "50" (whole shekels without ".00", like price tags in shops) */
 export function formatPrice(agorot: number) {
-  return priceFmt.format(agorot / 100);
+  return agorot % 100 === 0 ? wholeFmt.format(agorot / 100) : centsFmt.format(agorot / 100);
 }
 
 /** agorot -> value for a price <input> ("49.90") */

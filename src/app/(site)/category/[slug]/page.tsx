@@ -7,6 +7,7 @@ import { formatPrice } from "@/lib/format";
 import { getCategoryBySlug, getCategoryProducts, type CategoryFilters } from "@/lib/queries";
 import { siteUrl } from "@/lib/settings";
 import { AutoSubmit } from "./AutoSubmit";
+import { OpenOnDesktop } from "./OpenOnDesktop";
 
 type Params = Promise<{ slug: string }>;
 type Search = Promise<Record<string, string | string[] | undefined>>;
@@ -104,6 +105,13 @@ export default async function CategoryPage({ params, searchParams }: { params: P
   for (const [k, v] of Object.entries(sp)) if (k !== "limit") for (const x of list(v)) moreParams.append(k, x);
   moreParams.set("limit", String(f.limit + PAGE));
   const nextLimitHref = `${base}?${moreParams.toString()}`;
+  const activeFilters =
+    (f.min !== undefined ? 1 : 0) +
+    (f.max !== undefined ? 1 : 0) +
+    f.brands.length +
+    f.types.length +
+    Object.values(f.specs).reduce((n, v) => n + v.length, 0) +
+    (f.inStock ? 1 : 0);
 
   return (
     <main className="page">
@@ -129,9 +137,13 @@ export default async function CategoryPage({ params, searchParams }: { params: P
         )}
 
         <div className="cat-layout">
-          <details className="panel filters" open>
+          {/* Closed on phones (products first); opened on wide screens by OpenOnDesktop. */}
+          <details className="panel filters" id="filters-panel">
             <summary>
-              <span>סינון</span>
+              <span>
+                סינון
+                {activeFilters > 0 && <span className="filter-count"> ({activeFilters} פעילים)</span>}
+              </span>
               <span className="toggle-hint" aria-hidden="true">⌄</span>
             </summary>
             <form method="get" action={base} id="filters">
@@ -199,6 +211,7 @@ export default async function CategoryPage({ params, searchParams }: { params: P
                 </Link>
               </div>
               <AutoSubmit formId="filters" />
+              <OpenOnDesktop id="filters-panel" />
             </form>
           </details>
 

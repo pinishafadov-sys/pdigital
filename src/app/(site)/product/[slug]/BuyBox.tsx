@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { AddToCartButton } from "@/components/site/CartBits";
 import { discountPercent, formatPrice } from "@/lib/format";
 
@@ -9,8 +9,25 @@ type V = { id: string; name: string | null; sku: string; price: number; compareA
 export function BuyBox({ product, variants }: { product: { slug: string; name: string; imageUrl: string | null }; variants: V[] }) {
   const [vid, setVid] = useState(variants[0]?.id);
   const [qty, setQty] = useState(1);
+  const [showBar, setShowBar] = useState(false);
+  const rowRef = useRef<HTMLDivElement>(null);
   const v = variants.find((x) => x.id === vid);
+
+  // Show the bottom bar only after the main buy button has scrolled up out of view.
+  useEffect(() => {
+    const el = rowRef.current;
+    if (!el) return;
+    const io = new IntersectionObserver(([e]) => setShowBar(!e.isIntersecting && e.boundingClientRect.top < 0));
+    io.observe(el);
+    return () => io.disconnect();
+  }, []);
+  useEffect(() => {
+    document.body.classList.toggle("has-buybar", showBar);
+    return () => document.body.classList.remove("has-buybar");
+  }, [showBar]);
+
   if (!v) return <p className="placeholder">[מחיר]</p>;
+  const item = { variantId: v.id, slug: product.slug, name: product.name, variantName: v.name, price: v.price, imageUrl: product.imageUrl };
   const pct = discountPercent(v.price, v.compareAt);
   const inStock = v.stock > 0;
   const maxQty = Math.max(1, Math.min(v.stock, 10));
@@ -44,7 +61,7 @@ export function BuyBox({ product, variants }: { product: { slug: string; name: s
           </select>
         </label>
       )}
-      <div className="buy-row">
+      <div className="buy-row" ref={rowRef}>
         <div className="qty" role="group" aria-label="כמות">
           <button type="button" aria-label="הגדלת כמות" onClick={() => setQty((q) => Math.min(maxQty, q + 1))}>+</button>
           <output aria-live="polite">{qty}</output>
@@ -54,9 +71,19 @@ export function BuyBox({ product, variants }: { product: { slug: string; name: s
           className="btn btn-primary btn-lg"
           qty={qty}
           disabled={!inStock}
-          item={{ variantId: v.id, slug: product.slug, name: product.name, variantName: v.name, price: v.price, imageUrl: product.imageUrl }}
+          item={item}
         />
       </div>
+      {/* Phones: once the main button scrolls out of view, keep price + "add to cart" at the bottom. */}
+      {inStock && (
+        <div className={`buybar ${showBar ? "show" : ""}`} aria-hidden={!showBar} inert={!showBar}>
+          <div className="buybar-price">
+            <b>₪{formatPrice(v.price)}</b>
+            {variants.length > 1 && v.name && <span>{v.name}</span>}
+          </div>
+          <AddToCartButton className="btn btn-primary" qty={qty} item={item} />
+        </div>
+      )}
     </>
   );
 }

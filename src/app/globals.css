@@ -2412,3 +2412,203 @@ html.a11y-still *::after {
 .side-banner {
   isolation: isolate;
 }
+
+/* ------------------------------------------------------------------ phone polish
+   Touch targets of at least 44px (Google's mobile guidance and WCAG), nothing that
+   wraps awkwardly on narrow cards, and room at the bottom for the floating buttons. */
+.cat-chips {
+  background: var(--bg-surface);
+  align-items: center;
+}
+
+.cat-chips a {
+  display: inline-flex;
+  align-items: center;
+  min-height: 40px;
+  padding: 8px 16px;
+}
+
+.header-search button {
+  min-width: 44px;
+  min-height: 44px;
+  align-items: center;
+  justify-content: center;
+}
+
+.section-head a {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+}
+
+.footer-col ul {
+  gap: 0;
+}
+
+.footer-col li a {
+  display: inline-flex;
+  align-items: center;
+  min-height: 40px;
+}
+
+.footer-bottom nav a {
+  display: inline-flex;
+  align-items: center;
+  min-height: 40px;
+}
+
+@media (max-width: 899px) {
+  /* The accessibility button floats bottom-left: keep the last footer lines clear of it. */
+  .site-footer {
+    padding-bottom: 72px;
+  }
+}
+
+@media (max-width: 520px) {
+  .pcard {
+    padding: 10px;
+  }
+
+  .pcard .btn {
+    padding: 0 8px;
+    font-size: 0.9375rem;
+    white-space: nowrap;
+  }
+
+  .pcard .price-now {
+    font-size: 1.25rem;
+  }
+}
+
+.filter-count {
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--text-orange-ink);
+}
+
+@media (max-width: 959px) {
+  .filters summary {
+    min-height: 52px;
+    align-items: center;
+  }
+}
+
+/* ------------------------------------------------------------------ product: bottom buy bar (phones) */
+.buybar {
+  position: fixed;
+  inset-inline: 0;
+  bottom: 0;
+  z-index: 55;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 10px 16px calc(10px + env(safe-area-inset-bottom));
+  background: var(--bg-surface);
+  border-top: 1px solid var(--line);
+  box-shadow: 0 -6px 20px rgb(21 19 31 / 0.12);
+  transform: translateY(110%);
+  transition: transform 0.25s ease;
+}
+
+.buybar.show {
+  transform: none;
+}
+
+.buybar-price {
+  display: flex;
+  flex-direction: column;
+  line-height: 1.2;
+}
+
+.buybar-price b {
+  font-size: 1.375rem;
+}
+
+.buybar-price span {
+  font-size: 0.8125rem;
+  color: var(--text-muted);
+}
+
+.buybar .btn {
+  flex: 1;
+  max-width: 220px;
+  min-height: 48px;
+}
+
+/* Keep the accessibility button above the bar. */
+.has-buybar .a11y-fab {
+  bottom: calc(84px + env(safe-area-inset-bottom));
+}
+
+@media (min-width: 900px) {
+  .buybar {
+    display: none;
+  }
+}
+
+/* iPhone zooms the page when a field's text is under 16px; keep fields at 16px+ on phones. */
+@media (max-width: 899px) {
+  input:not([type="checkbox"]):not([type="radio"]),
+  select,
+  textarea {
+    font-size: max(16px, 1em);
+  }
+}
+
+/* Very small phones (320-380px): the logo row must fit without sideways scrolling. */
+@media (max-width: 380px) {
+  .site-header .container {
+    gap: 8px;
+  }
+
+  .header-logo .logo-word {
+    font-size: 22px !important;
+  }
+
+  .header-actions {
+    gap: 8px;
+  }
+
+  /* Icon only; the word stays for screen readers. */
+  .login-link {
+    font-size: 0;
+    min-width: 44px;
+    min-height: 44px;
+    justify-content: center;
+  }
+}
+
+/* ------------------------------------------------------------------ cart on phones */
+.cart-controls {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 6px;
+}
+
+.cart-layout > * {
+  min-width: 0;
+}
+
+@media (max-width: 480px) {
+  .cart-line {
+    grid-template-columns: 64px 1fr;
+    gap: 10px 12px;
+    padding: 14px;
+  }
+
+  .cart-line img,
+  .cart-line .ph {
+    width: 64px;
+    height: 64px;
+  }
+
+  /* Quantity and "remove" go on their own row under the product. */
+  .cart-controls {
+    grid-column: 1 / -1;
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+  }
+}

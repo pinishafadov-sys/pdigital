@@ -39,13 +39,18 @@ export function CartView({ freeShippingFrom }: { freeShippingFrom: number | null
               {i.variantName && <div style={{ fontSize: 14, color: "var(--text-muted)" }}>{i.variantName}</div>}
               <div style={{ fontSize: 14 }}>₪{formatPrice(i.price)} ליחידה</div>
             </div>
-            <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", gap: 6 }}>
+            <div className="cart-controls">
               <div className="qty" role="group" aria-label={`כמות עבור ${i.name}`}>
                 <button type="button" aria-label="הגדלת כמות" onClick={() => setQty(i.variantId, i.qty + 1)}>+</button>
                 <output>{i.qty}</output>
                 <button type="button" aria-label="הקטנת כמות" onClick={() => setQty(i.variantId, i.qty - 1)}>−</button>
               </div>
-              <button type="button" onClick={() => setQty(i.variantId, 0)} style={{ background: "none", border: 0, color: "var(--text-danger)", cursor: "pointer", fontSize: 14 }}>
+              <button
+                type="button"
+                onClick={() => setQty(i.variantId, 0)}
+                aria-label={`הסרת ${i.name} מהעגלה`}
+                style={{ background: "none", border: 0, color: "var(--text-danger)", cursor: "pointer", fontSize: 14, minHeight: 44, minWidth: 44, padding: "0 8px" }}
+              >
                 הסרה
               </button>
             </div>

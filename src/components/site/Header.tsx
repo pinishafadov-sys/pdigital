@@ -31,6 +31,7 @@ export async function Header() {
   const tel = telLink(s.business.phone);
 
   return (
+    <>
     <header className="site-header">
       <div className="container">
         <Link href="/" className="header-logo" aria-label={`${s.business.name} - דף הבית`}>
@@ -68,6 +69,9 @@ export async function Header() {
           </Link>
         </div>
       </div>
+    </header>
+      {/* Category chips sit outside the sticky header: on phones they scroll away and
+          leave more of the screen for products, while logo + search stay on top. */}
       {cats.length > 0 && (
         <nav aria-label="מחלקות" className="cat-chips">
           {cats.map((c) => (
@@ -79,6 +83,6 @@ export async function Header() {
           <Link href="/contact">צור קשר</Link>
         </nav>
       )}
-    </header>
+    </>
   );
 }

@@ -17,6 +17,7 @@ const secularOne = Secular_One({
 export const viewport: Viewport = {
   width: "device-width",
   initialScale: 1,
+  viewportFit: "cover", // lets the bottom buy bar respect the iPhone home-bar area
   themeColor: "#5b2a7e",
 };
 
