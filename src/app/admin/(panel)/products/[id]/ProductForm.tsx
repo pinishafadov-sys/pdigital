@@ -9,12 +9,13 @@ type VariantRow = { id: string; name: string; sku: string; price: string; compar
 type Props = {
   product: {
     id: string; name: string; slug: string; shortDescription: string | null; description: string | null;
-    status: string; tags: string[]; categoryId: string; brandId: string | null; productTypeId: string | null;
+    status: string; tags: string[]; categoryId: string; brandId: string | null; supplierId: string | null; productTypeId: string | null;
     warrantyMonths: number | null; isWeeklyDeal: boolean; noReorder: boolean; inGoogleShopping: boolean; seoTitle: string | null; seoDescription: string | null;
     variants: VariantRow[]; images: { url: string; alt: string }[]; specs: Record<string, string>; accessories: string[];
   } | null;
   categories: Opt[];
   brands: Opt[];
+  suppliers: Opt[];
   types: { id: string; name: string; fields: { id: string; label: string; unit: string | null }[] }[];
   accessoryOptions: { id: string; name: string }[];
   vatRate: number;
@@ -55,7 +56,7 @@ const emptyVariant = (): VariantRow => ({ id: "", name: "", sku: "", price: "", 
 let key = 0;
 const withKey = <T,>(x: T) => ({ ...x, _k: ++key });
 
-export function ProductForm({ product: p, categories, brands, types, accessoryOptions, vatRate }: Props) {
+export function ProductForm({ product: p, categories, brands, suppliers, types, accessoryOptions, vatRate }: Props) {
   const [variants, setVariants] = useState(() => (p?.variants.length ? p.variants : [emptyVariant()]).map(withKey));
   const [images, setImages] = useState(() => (p?.images ?? []).map(withKey));
   const [typeId, setTypeId] = useState(p?.productTypeId ?? "");
@@ -95,6 +96,14 @@ export function ProductForm({ product: p, categories, brands, types, accessoryOp
               <option value="">ללא</option>
               {brands.map((b) => <option key={b.value} value={b.value}>{b.label}</option>)}
             </select>
+          </label>
+          <label className="field">
+            <span>ספק</span>
+            <select name="supplierId" defaultValue={p?.supplierId ?? ""}>
+              <option value="">ללא</option>
+              {suppliers.map((s) => <option key={s.value} value={s.value}>{s.label}</option>)}
+            </select>
+            <span className="hint">ממי קונים את המוצר. משמש להזמנות רכש ולהמלצות להזמנה</span>
           </label>
           <label className="field">
             <span>סטטוס</span>

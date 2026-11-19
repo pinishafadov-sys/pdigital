@@ -36,6 +36,7 @@ model AdminUser {
   auditLogs          AuditLog[]
   resetTokens        PasswordResetToken[]
   stockMovements     StockMovement[]
+  purchaseOrders     PurchaseOrder[]
   createdAt          DateTime       @default(now())
   updatedAt          DateTime       @updatedAt
 }
@@ -188,6 +189,8 @@ model Product {
   category         Category           @relation(fields: [categoryId], references: [id])
   brandId          String?
   brand            Brand?             @relation(fields: [brandId], references: [id])
+  supplierId       String?
+  supplier         Supplier?          @relation(fields: [supplierId], references: [id], onDelete: SetNull)
   productTypeId    String?
   productType      ProductType?       @relation(fields: [productTypeId], references: [id])
   warrantyMonths   Int?
@@ -206,6 +209,7 @@ model Product {
 
   @@index([categoryId, status])
   @@index([brandId])
+  @@index([supplierId])
 }
 
 model ProductImage {
@@ -236,6 +240,7 @@ model ProductVariant {
   sortOrder         Int         @default(0)
   orderItems        OrderItem[]
   stockMovements    StockMovement[]
+  purchaseItems     PurchaseOrderItem[]
   createdAt         DateTime    @default(now())
   updatedAt         DateTime    @updatedAt
 
@@ -554,4 +559,71 @@ model SiteSetting {
   key       String   @id
   value     Json
   updatedAt DateTime @updatedAt
+}
+
+// ---------------------------------------------------------------- purchasing
+
+/// A supplier the store buys stock from.
+model Supplier {
+  id             String          @id @default(cuid())
+  name           String
+  contactName    String?
+  phone          String?
+  whatsapp       String?
+  email          String?
+  address        String?
+  taxId          String? // ח.פ / ע.מ
+  notes          String?
+  leadTimeDays   Int? // days from ordering to stock in store; used by reorder alerts
+  isActive       Boolean         @default(true)
+  products       Product[]
+  purchaseOrders PurchaseOrder[]
+  createdAt      DateTime        @default(now())
+  updatedAt      DateTime        @updatedAt
+}
+
+enum PurchaseOrderStatus {
+  DRAFT     // טיוטה
+  SENT      // נשלחה לספק
+  PARTIAL   // התקבלה חלקית
+  RECEIVED  // התקבלה במלואה
+  CANCELLED // בוטלה
+}
+
+/// A purchase order to a supplier. Receiving goods adds the quantities to stock.
+model PurchaseOrder {
+  id          String              @id @default(cuid())
+  number      Int                 @unique @default(autoincrement())
+  supplierId  String
+  supplier    Supplier            @relation(fields: [supplierId], references: [id])
+  status      PurchaseOrderStatus @default(DRAFT)
+  notes       String?
+  expectedAt  DateTime?
+  sentAt      DateTime?
+  receivedAt  DateTime?
+  createdById String?
+  createdBy   AdminUser?          @relation(fields: [createdById], references: [id], onDelete: SetNull)
+  items       PurchaseOrderItem[]
+  createdAt   DateTime            @default(now())
+  updatedAt   DateTime            @updatedAt
+
+  @@index([supplierId])
+  @@index([status, createdAt])
+}
+
+model PurchaseOrderItem {
+  id              String          @id @default(cuid())
+  purchaseOrderId String
+  purchaseOrder   PurchaseOrder   @relation(fields: [purchaseOrderId], references: [id], onDelete: Cascade)
+  variantId       String?
+  variant         ProductVariant? @relation(fields: [variantId], references: [id], onDelete: SetNull)
+  name            String // product name when ordered (kept if the product is deleted)
+  sku             String?
+  qty             Int
+  receivedQty     Int             @default(0)
+  unitCost        Int             @default(0) // agorot per unit, before VAT
+  sortOrder       Int             @default(0)
+
+  @@index([purchaseOrderId])
+  @@index([variantId])
 }

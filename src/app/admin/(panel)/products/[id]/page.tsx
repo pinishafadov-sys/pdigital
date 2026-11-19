@@ -18,7 +18,7 @@ export default async function EditProductPage({ params, searchParams }: { params
   const { created } = await searchParams;
   const isNew = id === "new";
 
-  const [product, categories, brands, types, accessoryOptions] = await Promise.all([
+  const [product, categories, brands, types, accessoryOptions, suppliers] = await Promise.all([
     isNew
       ? null
       : db.product.findUnique({
@@ -34,6 +34,7 @@ export default async function EditProductPage({ params, searchParams }: { params
     db.brand.findMany({ orderBy: { name: "asc" } }),
     db.productType.findMany({ include: { specFields: { orderBy: { sortOrder: "asc" } } }, orderBy: { name: "asc" } }),
     db.product.findMany({ where: { category: { isAccessories: true }, ...(isNew ? {} : { id: { not: id } }) }, select: { id: true, name: true }, orderBy: { name: "asc" }, take: 300 }),
+    db.supplier.findMany({ where: { OR: [{ isActive: true }, { products: { some: { id } } }] }, select: { id: true, name: true }, orderBy: { name: "asc" } }),
   ]);
   if (!isNew && !product) notFound();
   const vatRate = await getVatRate();
@@ -75,6 +76,7 @@ export default async function EditProductPage({ params, searchParams }: { params
               tags: product.tags,
               categoryId: product.categoryId,
               brandId: product.brandId,
+              supplierId: product.supplierId,
               productTypeId: product.productTypeId,
               warrantyMonths: product.warrantyMonths,
               isWeeklyDeal: product.isWeeklyDeal,
@@ -92,6 +94,7 @@ export default async function EditProductPage({ params, searchParams }: { params
           }
           categories={categories.map((c) => ({ value: c.id, label: c.parent ? `${c.parent.name} › ${c.name}` : c.name }))}
           brands={brands.map((b) => ({ value: b.id, label: b.name }))}
+          suppliers={suppliers.map((s) => ({ value: s.id, label: s.name }))}
           types={types.map((t) => ({ id: t.id, name: t.name, fields: t.specFields.map((f) => ({ id: f.id, label: f.label, unit: f.unit })) }))}
           accessoryOptions={accessoryOptions}
           vatRate={vatRate}

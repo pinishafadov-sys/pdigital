@@ -79,6 +79,7 @@ export async function saveProduct(_prev: ActionState, fd: FormData): Promise<Act
       tags,
       categoryId,
       brandId: optStr(fd, "brandId", 40),
+      supplierId: optStr(fd, "supplierId", 40),
       productTypeId,
       warrantyMonths: optInt(fd, "warrantyMonths", { min: 0, max: 240 }),
       isWeeklyDeal: bool(fd, "isWeeklyDeal"),

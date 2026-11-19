@@ -12,6 +12,8 @@ export type ReorderRow = {
   title: string;
   sku: string;
   brand: string | null;
+  supplierId: string | null;
+  supplier: string | null;
   stock: number;
   sold: number; // units sold in the window (online + store, minus returns)
   perDay: number;
@@ -46,7 +48,16 @@ export async function reorderReport() {
   const [variants, sales] = await Promise.all([
     db.productVariant.findMany({
       where: { isActive: true, product: { status: { not: "ARCHIVED" }, noReorder: false } },
-      include: { product: { select: { id: true, name: true, brand: { select: { name: true, leadTimeDays: true } } } } },
+      include: {
+        product: {
+          select: {
+            id: true,
+            name: true,
+            brand: { select: { name: true, leadTimeDays: true } },
+            supplier: { select: { id: true, name: true, leadTimeDays: true } },
+          },
+        },
+      },
     }),
     db.stockMovement.groupBy({
       by: ["variantId", "reason"],
@@ -65,7 +76,7 @@ export async function reorderReport() {
     const sold = Math.max(0, soldBy.get(v.id) ?? 0);
     const ageDays = Math.max(7, Math.min(window, (now - v.createdAt.getTime()) / DAY));
     const perDay = sold / ageDays;
-    const leadTime = v.product.brand?.leadTimeDays ?? defaultLead;
+    const leadTime = v.product.supplier?.leadTimeDays ?? v.product.brand?.leadTimeDays ?? defaultLead;
     const daysLeft = perDay > 0 ? v.stock / perDay : null;
     let status: ReorderStatus = "no-sales";
     if (perDay > 0) status = daysLeft! <= leadTime ? "urgent" : daysLeft! <= leadTime + 7 ? "soon" : "ok";
@@ -76,6 +87,8 @@ export async function reorderReport() {
       title: v.name ? `${v.product.name} - ${v.name}` : v.product.name,
       sku: v.sku,
       brand: v.product.brand?.name ?? null,
+      supplierId: v.product.supplier?.id ?? null,
+      supplier: v.product.supplier?.name ?? null,
       stock: v.stock,
       sold,
       perDay,

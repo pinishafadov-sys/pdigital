@@ -11,6 +11,8 @@ export const ADMIN_DESTINATIONS: Destination[] = [
   { label: "ייבוא מוצרים מאקסל", href: "/admin/products/import", group: "פעולות", keywords: "ייבוא אקסל excel csv קובץ העלאת מוצרים רשימה" },
   { label: "מלאי", href: "/admin/stock", group: "מסכים", keywords: "מלאי כמות נמכר בחנות הגיעה סחורה ספירה החזרה" },
   { label: "המלצות להזמנה", href: "/admin/reorder", group: "מסכים", keywords: "להזמין ספק הזמנה מספק נמכרים ביותר אוזל" },
+  { label: "הזמנות רכש", href: "/admin/purchase-orders", group: "מסכים", keywords: "רכש הזמנת רכש ספק ספקים להזמין סחורה קליטת סחורה הגיעה סחורה" },
+  { label: "ספקים", href: "/admin/suppliers", group: "מסכים", keywords: "ספק ספקים יבואן מפיץ סיטונאי זמן אספקה" },
   { label: "דוח מלאי שנתי", href: "/admin/reports/stock", group: "מסכים", keywords: "דוח מלאי שנתי רואה חשבון ספירת מלאי pdf אקסל הדפסה שווי" },
   { label: "קטגוריות ותפריט", href: "/admin/categories", group: "מסכים", keywords: "קטגוריה מחלקה מחלקות תפריט אביזרים" },
   { label: "מותגים", href: "/admin/brands", group: "מסכים", keywords: "מותג לוגו יצרן זמן אספקה" },

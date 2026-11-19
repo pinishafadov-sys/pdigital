@@ -5,6 +5,8 @@ import { fmtDays, reorderReport } from "@/lib/reorder";
 import { getSettings } from "@/lib/settings";
 import { AdminTop } from "../AdminTop";
 import { PrintButtons } from "../PrintButtons";
+import { createFromReorder } from "../purchase-orders/actions";
+import { SubmitButton } from "../ui";
 
 export const metadata = { title: "המלצות להזמנה" };
 
@@ -18,6 +20,15 @@ const STATUS = {
 export default async function ReorderPage() {
   await requireAdmin("MANAGER");
   const [{ toOrder, bestSellers, settings }, s] = await Promise.all([reorderReport(), getSettings()]);
+  const groups = new Map<string, { id: string; name: string; count: number }>();
+  for (const r of toOrder) {
+    if (!r.supplierId) continue;
+    const g = groups.get(r.supplierId) ?? { id: r.supplierId, name: r.supplier ?? "", count: 0 };
+    g.count++;
+    groups.set(r.supplierId, g);
+  }
+  const bySupplier = [...groups.values()];
+  const noSupplier = toOrder.filter((r) => !r.supplierId).length;
   const today = new Intl.DateTimeFormat("he-IL", { timeZone: "Asia/Jerusalem", dateStyle: "short" }).format(new Date());
 
   return (
@@ -38,19 +49,46 @@ export default async function ReorderPage() {
           {settings.cover} ימים. <Link href="/admin/settings#inventory">שינוי ההגדרות ←</Link>
         </p>
 
+        {toOrder.length > 0 && (
+          <section className="card no-print" aria-labelledby="by-supplier">
+            <h2 id="by-supplier">יצירת הזמנת רכש לפי ספק</h2>
+            {bySupplier.length > 0 && (
+              <div className="toolbar-row">
+                {bySupplier.map((g) => (
+                  <form key={g.id} action={createFromReorder}>
+                    <input type="hidden" name="supplierId" value={g.id} />
+                    <SubmitButton label={`הזמנת רכש: ${g.name} (${g.count} ${g.count === 1 ? "מוצר" : "מוצרים"})`} className="btn btn-primary" />
+                  </form>
+                ))}
+              </div>
+            )}
+            <p className="help" style={{ marginBottom: 0 }}>
+              {bySupplier.length > 0
+                ? "לחיצה יוצרת טיוטת הזמנה עם המוצרים והכמויות המומלצות של אותו ספק. אפשר לשנות כמויות לפני השליחה. "
+                : ""}
+              {noSupplier > 0 && (
+                <>
+                  ל-{noSupplier} מוצרים ברשימה לא הוגדר ספק. בחרו ספק בעריכת המוצר כדי שייכנסו להזמנה אוטומטית.{" "}
+                  <Link href="/admin/suppliers">ניהול ספקים ←</Link>
+                </>
+              )}
+            </p>
+          </section>
+        )}
+
         <section className="card table-wrap" aria-labelledby="to-order">
           <h2 id="to-order">כדאי להזמין ({toOrder.length})</h2>
           {toOrder.length ? (
             <table className="table">
               <thead>
-                <tr><th>מוצר</th><th>מק&quot;ט</th><th>מותג</th><th>במלאי</th><th>נמכר ב-{settings.window} יום</th><th>יספיק ל-</th><th>כמות מומלצת</th><th>מצב</th></tr>
+                <tr><th>מוצר</th><th>מק&quot;ט</th><th>ספק</th><th>במלאי</th><th>נמכר ב-{settings.window} יום</th><th>יספיק ל-</th><th>כמות מומלצת</th><th>מצב</th></tr>
               </thead>
               <tbody>
                 {toOrder.map((r) => (
                   <tr key={r.variantId}>
                     <td><Link href={`/admin/stock?v=${r.variantId}#history`}>{r.title}</Link></td>
                     <td dir="ltr">{r.sku}</td>
-                    <td>{r.brand ?? "-"}</td>
+                    <td>{r.supplier ?? <span className="muted">לא הוגדר</span>}</td>
                     <td>{r.stock}</td>
                     <td>{r.sold}</td>
                     <td>{fmtDays(r.daysLeft)}</td>

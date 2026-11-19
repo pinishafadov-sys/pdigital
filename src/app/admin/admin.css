@@ -1013,3 +1013,76 @@
   font-size: 0.9375rem;
   margin: 0;
 }
+
+/* ---------- purchase orders */
+.btn-whatsapp {
+  background: var(--bg-green-soft);
+  border: 1px solid var(--whatsapp);
+  color: var(--text-success);
+  font-weight: 700;
+}
+
+.po-head {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.po-sup {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 16px;
+  margin-bottom: 6px;
+}
+
+.po-meta {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 4px;
+  font-size: 14px;
+}
+
+.po-input {
+  width: 100px;
+  min-height: 40px;
+  padding: 4px 8px;
+  border: 1px solid var(--line-strong);
+  border-radius: var(--radius-sm);
+  font: inherit;
+}
+
+.po-add {
+  margin-top: 20px;
+  padding-top: 16px;
+  border-top: 1px solid var(--line);
+}
+
+.po-add h3 {
+  margin: 0 0 8px;
+}
+
+.po-totals {
+  display: grid;
+  grid-template-columns: auto auto;
+  justify-content: end;
+  gap: 4px 24px;
+  margin: 14px 0 0;
+}
+
+.po-totals dt,
+.po-totals dd {
+  margin: 0;
+}
+
+@media print {
+  .po-print-table {
+    display: block !important;
+  }
+
+  .po-head {
+    border: 0 !important;
+    padding: 0 !important;
+  }
+}
