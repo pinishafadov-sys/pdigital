@@ -88,6 +88,13 @@ export async function placeOrderAction(_prev: CheckoutState, fd: FormData): Prom
     }
   }
 
+  // Cost per unit, kept on the order for the profit report (server only, never sent to the browser).
+  const costs = new Map(
+    (await db.productVariant.findMany({ where: { id: { in: priced.items.map((i) => i.variantId) } }, select: { id: true, costPrice: true } })).map(
+      (v) => [v.id, v.costPrice],
+    ),
+  );
+
   const order = await db.order.create({
     data: {
       status: "PENDING_PAYMENT",
@@ -107,7 +114,7 @@ export async function placeOrderAction(_prev: CheckoutState, fd: FormData): Prom
       subtotal: priced.subtotal,
       shippingTotal: ship,
       total: priced.subtotal + ship,
-      items: { create: priced.items },
+      items: { create: priced.items.map((i) => ({ ...i, unitCost: costs.get(i.variantId) ?? null })) },
     },
   });
 

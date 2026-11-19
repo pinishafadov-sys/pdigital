@@ -266,6 +266,8 @@ model StockMovement {
   reason     StockReason
   note       String?
   orderId    String?
+  unitPrice  Int? // store sales: selling price per unit when sold (agorot, incl. VAT)
+  unitCost   Int? // store sales: purchase cost per unit when sold (agorot, before VAT)
   userId     String?
   user       AdminUser?     @relation(fields: [userId], references: [id], onDelete: SetNull)
   createdAt  DateTime       @default(now())
@@ -405,6 +407,7 @@ model OrderItem {
   unitPrice   Int // agorot
   quantity    Int
   lineTotal   Int
+  unitCost    Int? // purchase cost per unit (before VAT) when ordered - admin only, for profit reports
 
   @@index([orderId])
 }
@@ -629,4 +632,20 @@ model PurchaseOrderItem {
 
   @@index([purchaseOrderId])
   @@index([variantId])
+}
+
+// ---------------------------------------------------------------- statistics
+
+/// One page view on the storefront. Privacy-friendly: no cookies, no IP stored.
+/// `visitor` is a one-way hash of IP + browser + the day, so the same person is
+/// counted once per day and cannot be followed from one day to the next.
+model PageView {
+  id        String   @id @default(cuid())
+  path      String
+  visitor   String
+  referrer  String? // site the visitor came from (host only), null = direct
+  device    String // "mobile" | "desktop"
+  createdAt DateTime @default(now())
+
+  @@index([createdAt])
 }

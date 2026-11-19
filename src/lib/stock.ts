@@ -14,7 +14,7 @@ export const STOCK_REASON_LABEL: Record<StockReason, string> = {
   ORDER_CANCELLED: "הזמנה בוטלה",
 };
 
-type Meta = { userId?: string | null; note?: string | null; orderId?: string | null };
+type Meta = { userId?: string | null; note?: string | null; orderId?: string | null; unitPrice?: number | null; unitCost?: number | null };
 
 /**
  * Atomically changes a variant's stock by `change` and records it.
@@ -35,7 +35,17 @@ export async function changeStock(variantId: string, change: number, reason: Sto
   }
   const v = await tx.productVariant.findUniqueOrThrow({ where: { id: variantId }, select: { stock: true } });
   await tx.stockMovement.create({
-    data: { variantId, change, stockAfter: v.stock, reason, note: meta.note ?? null, orderId: meta.orderId ?? null, userId: meta.userId ?? null },
+    data: {
+      variantId,
+      change,
+      stockAfter: v.stock,
+      reason,
+      note: meta.note ?? null,
+      orderId: meta.orderId ?? null,
+      userId: meta.userId ?? null,
+      unitPrice: meta.unitPrice ?? null,
+      unitCost: meta.unitCost ?? null,
+    },
   });
   return v.stock;
 }

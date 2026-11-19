@@ -4,6 +4,7 @@ export type Destination = { label: string; href: string; group: string; keywords
 
 export const ADMIN_DESTINATIONS: Destination[] = [
   { label: "לוח בקרה", href: "/admin", group: "מסכים", keywords: "בית ראשי סיכום דשבורד" },
+  { label: "סטטיסטיקות", href: "/admin/stats", group: "מסכים", keywords: "סטטיסטיקה כניסות מבקרים צפיות הכנסות רווח רווח נקי כסף מכירות גרף יומי שבועי חודשי שנתי המרה מקורות תנועה" },
   { label: "הזמנות וחשבוניות", href: "/admin/orders", group: "מסכים", keywords: "הזמנה חשבונית לקוחות קניות מכירות סטטוס משלוח מעקב" },
   { label: "לקוחות יוצרים קשר", href: "/admin/messages", group: "מסכים", keywords: "פניות הודעות צור קשר לקוח פנייה" },
   { label: "מוצרים", href: "/admin/products", group: "מסכים", keywords: "מוצר פריט מחיר מחירים קטלוג" },

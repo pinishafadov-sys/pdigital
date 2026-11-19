@@ -2,6 +2,7 @@ import { headers } from "next/headers";
 import { AccessibilityMenu } from "@/components/site/AccessibilityMenu";
 import { Footer } from "@/components/site/Footer";
 import { Header } from "@/components/site/Header";
+import { VisitTracker } from "@/components/site/VisitTracker";
 import { JsonLd } from "@/components/site/Shared";
 import { isPlaceholder } from "@/lib/format";
 import { getSettings, siteUrl } from "@/lib/settings";
@@ -26,6 +27,7 @@ export default async function SiteLayout({ children }: { children: React.ReactNo
       </div>
       <Footer />
       <AccessibilityMenu />
+      <VisitTracker />
       <JsonLd
         nonce={nonce}
         data={{

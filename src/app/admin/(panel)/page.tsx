@@ -4,7 +4,8 @@ import { db } from "@/lib/db";
 import { formatDateTime, formatPrice } from "@/lib/format";
 import { ORDER_STATUS } from "@/lib/order-status";
 import { fmtDays, reorderReport } from "@/lib/reorder";
-import { getSettings } from "@/lib/settings";
+import { getSettings, getVatRate } from "@/lib/settings";
+import { lastDaysStart, statsSince } from "@/lib/stats";
 import { AdminTop } from "./AdminTop";
 import { SmartSearch } from "./SmartSearch";
 
@@ -46,6 +47,7 @@ export default async function Dashboard({ searchParams }: { searchParams: Promis
     reorderReport(),
   ]);
   const urgent = reorder.toOrder.slice(0, 6);
+  const week7 = await statsSince(lastDaysStart(7), await getVatRate());
   const analyticsOn = !!s.seo.gaId;
 
   return (
@@ -67,9 +69,12 @@ export default async function Dashboard({ searchParams }: { searchParams: Promis
           <div className="card kpi"><span className="label">הזמנות</span><span className="value">{orderCount}</span><span className="note">7 ימים אחרונים</span></div>
           <div className="card kpi"><span className="label">מוצרים פעילים</span><span className="value">{productCount}</span><span className="note"><Link href="/admin/products">ניהול מוצרים ←</Link></span></div>
           <div className="card kpi">
-            <span className="label">מבקרים והמרה</span>
-            <span className="value" style={{ fontSize: 16 }}>{analyticsOn ? "ב-Google Analytics" : "[לא מחובר]"}</span>
-            <span className="note">{analyticsOn ? <a href="https://analytics.google.com" target="_blank" rel="noopener noreferrer">פתיחת Analytics ←</a> : <Link href="/admin/settings#seo">חיבור Google Analytics ←</Link>}</span>
+            <span className="label">כניסות לאתר</span>
+            <span className="value">{week7.visitors.toLocaleString("he-IL")}</span>
+            <span className="note">
+              המרה {week7.conversion == null ? "-" : `${week7.conversion.toFixed(1)}%`} · <Link href="/admin/stats">כל הסטטיסטיקות ←</Link>
+              {analyticsOn && <> · <a href="https://analytics.google.com" target="_blank" rel="noopener noreferrer">Analytics</a></>}
+            </span>
           </div>
         </section>
 
