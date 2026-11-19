@@ -601,6 +601,7 @@ model PurchaseOrder {
   expectedAt  DateTime?
   sentAt      DateTime?
   receivedAt  DateTime?
+  invoiceNos  String? // supplier invoice numbers the goods arrived with, e.g. "1234, 1250"
   createdById String?
   createdBy   AdminUser?          @relation(fields: [createdById], references: [id], onDelete: SetNull)
   items       PurchaseOrderItem[]
@@ -622,6 +623,8 @@ model PurchaseOrderItem {
   qty             Int
   receivedQty     Int             @default(0)
   unitCost        Int             @default(0) // agorot per unit, before VAT
+  isNew           Boolean         @default(false) // product not on the site yet: created when it arrives and is priced
+  pricedAt        DateTime? // when a new product was priced and added to the site
   sortOrder       Int             @default(0)
 
   @@index([purchaseOrderId])

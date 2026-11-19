@@ -8,7 +8,7 @@ import { getSettings, getVatRate } from "@/lib/settings";
 import { AdminTop } from "../../AdminTop";
 import { PrintButtons } from "../../PrintButtons";
 import { ActionForm, ConfirmButton, SubmitButton } from "../../ui";
-import { addPoItem, receivePurchaseOrder, savePurchaseOrder, setPoStatus } from "../actions";
+import { addNewPoItem, addPoItem, pricePoItem, receivePurchaseOrder, savePurchaseOrder, setPoStatus } from "../actions";
 
 export const metadata = { title: "הזמנת רכש" };
 
@@ -47,6 +47,11 @@ export default async function PurchaseOrderPage({ params }: { params: Promise<{ 
   ]);
 
   const received = po.items.some((i) => i.receivedQty > 0);
+  const toPrice = po.items.filter((i) => i.isNew && !i.pricedAt && i.receivedQty > 0);
+  const priced = po.items.filter((i) => i.isNew && i.pricedAt);
+  const categories = toPrice.length
+    ? await db.category.findMany({ where: { isActive: true }, orderBy: [{ sortOrder: "asc" }, { name: "asc" }], include: { parent: { select: { name: true } } } })
+    : [];
   const editable = po.status === "DRAFT" || (po.status === "SENT" && !received);
   const receiving = po.status === "SENT" || po.status === "PARTIAL";
   const t = poTotals(po.items, vatRate);
@@ -131,6 +136,7 @@ export default async function PurchaseOrderPage({ params }: { params: Promise<{ 
             <span className="muted">נוצרה {formatDateTime(po.createdAt)}{po.createdBy ? ` ע"י ${po.createdBy.displayName}` : ""}</span>
             {po.sentAt && <span className="muted">נשלחה {formatDateTime(po.sentAt)}</span>}
             {po.receivedAt && <span className="muted">קבלה אחרונה {formatDateTime(po.receivedAt)}</span>}
+            {po.invoiceNos && <span className="muted">חשבוניות ספק: {po.invoiceNos}</span>}
           </div>
         </section>
 
@@ -172,7 +178,10 @@ export default async function PurchaseOrderPage({ params }: { params: Promise<{ 
                     <tbody>
                       {po.items.map((i) => (
                         <tr key={i.id}>
-                          <td>{i.name}<div className="muted" dir="ltr" style={{ fontSize: 12 }}>{i.sku}</div></td>
+                          <td>
+                            {i.name} {i.isNew && <span className="pill blue">מוצר חדש</span>}
+                            <div className="muted" dir="ltr" style={{ fontSize: 12 }}>{i.sku}</div>
+                          </td>
                           <td>{i.variant?.stock ?? "-"}</td>
                           <td><input className="po-input" name={`qty_${i.id}`} type="number" min={0} max={100000} defaultValue={i.qty} aria-label={`כמות - ${i.name}`} /></td>
                           <td><input className="po-input" name={`cost_${i.id}`} inputMode="decimal" defaultValue={priceInput(i.unitCost || null)} placeholder="0.00" aria-label={`מחיר ליחידה - ${i.name}`} /></td>
@@ -224,6 +233,35 @@ export default async function PurchaseOrderPage({ params }: { params: Promise<{ 
                   </div>
                 </ActionForm>
               </div>
+
+              <div className="no-print po-add">
+                <h3>מוצר חדש שעוד לא באתר</h3>
+                <p className="help">
+                  כותבים את שם המוצר כמו שהסוכן מכיר אותו. המוצר לא יופיע באתר עכשיו. כשהסחורה תגיע, תאשרו אותה, תקבעו מחיר מכירה, ורק אז
+                  המוצר יעלה לאתר עם המלאי שהגיע.
+                </p>
+                <ActionForm action={addNewPoItem} submitLabel="הוספת מוצר חדש להזמנה" resetOnSuccess>
+                  <input type="hidden" name="poId" value={po.id} />
+                  <div className="form-grid cols-3">
+                    <label className="field" style={{ gridColumn: "span 2" }}>
+                      <span>שם המוצר *</span>
+                      <input name="name" required maxLength={200} placeholder='למשל: מטען 65W GaN לבן' />
+                    </label>
+                    <label className="field">
+                      <span>מק&quot;ט אצל הספק</span>
+                      <input name="supplierSku" maxLength={60} dir="ltr" />
+                    </label>
+                    <label className="field">
+                      <span>כמות</span>
+                      <input name="qty" type="number" min={1} max={100000} defaultValue={1} required />
+                    </label>
+                    <label className="field">
+                      <span>מחיר ליח&apos; ₪ (לפני מע&quot;מ)</span>
+                      <input name="cost" inputMode="decimal" placeholder="0.00" />
+                    </label>
+                  </div>
+                </ActionForm>
+              </div>
             </>
           ) : (
             readOnlyTable
@@ -236,13 +274,18 @@ export default async function PurchaseOrderPage({ params }: { params: Promise<{ 
         {/* ---------- receive goods */}
         {receiving && (
           <section className="card table-wrap no-print" aria-labelledby="receive">
-            <h2 id="receive">הסחורה הגיעה? קליטה למלאי</h2>
+            <h2 id="receive">הסחורה הגיעה? אישור לפי החשבונית</h2>
             <p className="help">
-              רשמו כמה הגיע מכל מוצר (מולא מראש מה שעוד חסר). הכמויות יתווספו למלאי באתר מיד, ויופיעו בהיסטוריית המלאי
-              כ&quot;הגיעה סחורה - הזמנת רכש #{po.number}&quot;. אם הגיע רק חלק, ההזמנה תישאר פתוחה לשאר.
+              עד שלא תאשרו כאן, שום דבר לא נכנס למלאי או לאתר. בדקו מול החשבונית של הספק כמה הגיע מכל מוצר (מולא מראש מה שעוד חסר), תקנו
+              אם צריך ולחצו אישור. מוצרים קיימים נכנסים למלאי באתר מיד. מוצרים חדשים יחכו לתמחור שלכם. אם הגיע רק חלק, ההזמנה תישאר פתוחה לשאר.
             </p>
-            <ActionForm action={receivePurchaseOrder} submitLabel="קליטה למלאי">
+            <ActionForm action={receivePurchaseOrder} submitLabel="אישור קבלת הסחורה">
               <input type="hidden" name="poId" value={po.id} />
+              <label className="field" style={{ maxWidth: 280 }}>
+                <span>מספר חשבונית של הספק</span>
+                <input name="invoiceNo" maxLength={40} dir="ltr" inputMode="numeric" />
+                <span className="hint">לא חובה. נשמר בהזמנה ובהיסטוריית המלאי</span>
+              </label>
               <table className="table">
                 <thead><tr><th>מוצר</th><th>הוזמן</th><th>התקבל עד עכשיו</th><th>הגיע עכשיו</th></tr></thead>
                 <tbody>
@@ -250,11 +293,14 @@ export default async function PurchaseOrderPage({ params }: { params: Promise<{ 
                     const left = Math.max(0, i.qty - i.receivedQty);
                     return (
                       <tr key={i.id}>
-                        <td>{i.name}</td>
+                        <td>
+                          {i.name}
+                          {i.isNew && !i.pricedAt && <div className="muted" style={{ fontSize: 12 }}>מוצר חדש: ייכנס לאתר אחרי אישור ותמחור</div>}
+                        </td>
                         <td>{i.qty}</td>
                         <td>{i.receivedQty}</td>
                         <td>
-                          {i.variantId ? (
+                          {i.variantId || (i.isNew && !i.pricedAt) ? (
                             <input className="po-input" name={`recv_${i.id}`} type="number" min={0} max={100000} defaultValue={left} aria-label={`הגיע עכשיו - ${i.name}`} />
                           ) : (
                             <span className="muted">המוצר נמחק</span>
@@ -270,6 +316,71 @@ export default async function PurchaseOrderPage({ params }: { params: Promise<{ 
                 לעדכן את מחיר העלות של המוצרים לפי המחיר בהזמנה (לדוח המלאי)
               </label>
             </ActionForm>
+          </section>
+        )}
+
+        {/* ---------- new products that arrived: approve, price, add to site */}
+        {toPrice.length > 0 && (
+          <section className="card no-print po-price" aria-labelledby="to-price">
+            <h2 id="to-price">מוצרים חדשים שהגיעו: אישור ותמחור ({toPrice.length})</h2>
+            <p className="help">
+              הסחורה התקבלה. קבעו מחיר מכירה ובחרו קטגוריה, ולחצו &quot;אישור והעלאה לאתר&quot;. רק אז המוצר נוצר באתר, עם הכמות שהגיעה במלאי.
+              אחר כך אפשר להוסיף תמונות ותיאור בעריכת המוצר.
+            </p>
+            {toPrice.map((i) => (
+              <div key={i.id} className="po-price-item">
+                <h3>
+                  {i.name} <span className="muted" style={{ fontWeight: 400, fontSize: 14 }}>· הגיעו {i.receivedQty} יח&apos;
+                  {i.unitCost ? ` · עלות ₪${formatPrice(i.unitCost)} + מע"מ = ₪${formatPrice(Math.round(i.unitCost * (1 + vatRate / 100)))}` : ""}</span>
+                </h3>
+                <ActionForm action={pricePoItem} submitLabel="אישור והעלאה לאתר">
+                  <input type="hidden" name="itemId" value={i.id} />
+                  <div className="form-grid cols-3">
+                    <label className="field" style={{ gridColumn: "span 2" }}>
+                      <span>שם המוצר באתר *</span>
+                      <input name="name" required maxLength={200} defaultValue={i.name} />
+                    </label>
+                    <label className="field">
+                      <span>מחיר מכירה ₪ (כולל מע&quot;מ) *</span>
+                      <input name="price" inputMode="decimal" required placeholder="0.00" />
+                    </label>
+                    <label className="field">
+                      <span>קטגוריה *</span>
+                      <select name="categoryId" required defaultValue="">
+                        <option value="" disabled>בחירה...</option>
+                        {categories.map((c) => <option key={c.id} value={c.id}>{c.parent ? `${c.parent.name} › ${c.name}` : c.name}</option>)}
+                      </select>
+                    </label>
+                    <label className="field">
+                      <span>מק&quot;ט</span>
+                      <input name="sku" maxLength={60} dir="ltr" defaultValue={i.sku ?? ""} placeholder="ריק = נוצר אוטומטית" />
+                    </label>
+                    <label className="field">
+                      <span>ברקוד</span>
+                      <input name="barcode" maxLength={40} dir="ltr" />
+                    </label>
+                  </div>
+                  <label className="check">
+                    <input type="checkbox" name="publish" defaultChecked />
+                    להציג באתר מיד (בלי סימון: נשמר כטיוטה, להוסיף תמונות ולפרסם אחר כך)
+                  </label>
+                </ActionForm>
+              </div>
+            ))}
+          </section>
+        )}
+
+        {priced.length > 0 && (
+          <section className="card no-print" aria-labelledby="priced">
+            <h2 id="priced">מוצרים חדשים שנוספו לאתר מההזמנה</h2>
+            <ul style={{ margin: 0, paddingInlineStart: 20 }}>
+              {priced.map((i) => (
+                <li key={i.id}>
+                  {i.name}{" "}
+                  {i.variant ? <Link href={`/admin/products/${i.variant.productId}`}>עריכה, תמונות ותיאור ←</Link> : <span className="muted">(נמחק)</span>}
+                </li>
+              ))}
+            </ul>
           </section>
         )}
 

@@ -8,7 +8,7 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { audit, requireAdmin } from "@/lib/auth/session";
 import { db } from "@/lib/db";
-import { bool, date, FormError, handle, int, optInt, optStr, shekels, str, type ActionState } from "@/lib/form";
+import { bool, date, FormError, handle, int, optInt, optStr, shekels, slugify, str, type ActionState } from "@/lib/form";
 import { reorderReport } from "@/lib/reorder";
 import { changeStock } from "@/lib/stock";
 
@@ -151,6 +151,32 @@ export async function addPoItem(_p: ActionState, fd: FormData): Promise<ActionSt
   });
 }
 
+/**
+ * A product that is not on the site yet (free text). It goes to the supplier
+ * like any other line, and becomes a real product only when the goods arrive
+ * and the owner approves a selling price (pricePoItem).
+ */
+export async function addNewPoItem(_p: ActionState, fd: FormData): Promise<ActionState> {
+  const me = await requireAdmin("MANAGER");
+  return handle(async () => {
+    const po = await editableOrder(id(fd, "poId"));
+    await db.purchaseOrderItem.create({
+      data: {
+        purchaseOrderId: po.id,
+        isNew: true,
+        name: str(fd, "name", { required: "יש לכתוב את שם המוצר", max: 200 }),
+        sku: optStr(fd, "supplierSku", 60),
+        qty: int(fd, "qty", { min: 1, max: 100000, fallback: 1 }),
+        unitCost: shekels(fd, "cost") ?? 0,
+        sortOrder: po.items.length,
+      },
+    });
+    await audit(me.id, "po_new_item_added", "PurchaseOrder", po.id);
+    revalidatePath(`/admin/purchase-orders/${po.id}`);
+    return { ok: true, message: "המוצר החדש נוסף להזמנה" };
+  });
+}
+
 /** Saves quantities, prices, removals, notes and expected date. */
 export async function savePurchaseOrder(_p: ActionState, fd: FormData): Promise<ActionState> {
   const me = await requireAdmin("MANAGER");
@@ -223,6 +249,7 @@ export async function receivePurchaseOrder(_p: ActionState, fd: FormData): Promi
   return handle(async () => {
     const poId = id(fd, "poId");
     const updateCost = bool(fd, "updateCost");
+    const invoiceNo = optStr(fd, "invoiceNo", 40);
     let units = 0;
     await db.$transaction(async (tx) => {
       const po = await tx.purchaseOrder.findUnique({ where: { id: poId }, include: { items: true } });
@@ -231,14 +258,22 @@ export async function receivePurchaseOrder(_p: ActionState, fd: FormData): Promi
       for (const item of po.items) {
         const n = int(fd, `recv_${item.id}`, { min: 0, max: 100000, fallback: 0 });
         if (!n) continue;
-        if (!item.variantId) throw new FormError(`המוצר "${item.name}" נמחק מהמערכת - אי אפשר להוסיף אותו למלאי`);
+        // A new product not yet priced: just count it; it enters stock when priced.
+        const waitsForPrice = item.isNew && !item.pricedAt;
+        if (!item.variantId && !waitsForPrice)
+          throw new FormError(`המוצר "${item.name}" נמחק מהמערכת - אי אפשר להוסיף אותו למלאי`);
         // Lock the row against a double click receiving the same goods twice.
         const res = await tx.purchaseOrderItem.updateMany({
           where: { id: item.id, receivedQty: item.receivedQty },
           data: { receivedQty: { increment: n } },
         });
         if (!res.count) throw new FormError("ההזמנה עודכנה בינתיים - רעננו את הדף");
-        await changeStock(item.variantId, n, "RESTOCK", { userId: me.id, note: `הזמנת רכש #${po.number}` }, tx);
+        if (waitsForPrice || !item.variantId) {
+          units += n;
+          continue;
+        }
+        const note = `הזמנת רכש #${po.number}${invoiceNo ? ` · חשבונית ${invoiceNo}` : ""}`;
+        await changeStock(item.variantId, n, "RESTOCK", { userId: me.id, note }, tx);
         if (updateCost && item.unitCost > 0) {
           await tx.productVariant.update({ where: { id: item.variantId }, data: { costPrice: item.unitCost } });
         }
@@ -249,11 +284,73 @@ export async function receivePurchaseOrder(_p: ActionState, fd: FormData): Promi
       const done = after.every((i) => i.receivedQty >= i.qty);
       await tx.purchaseOrder.update({
         where: { id: poId },
-        data: { status: done ? "RECEIVED" : "PARTIAL", receivedAt: new Date() },
+        data: {
+          status: done ? "RECEIVED" : "PARTIAL",
+          receivedAt: new Date(),
+          ...(invoiceNo ? { invoiceNos: po.invoiceNos ? `${po.invoiceNos}, ${invoiceNo}` : invoiceNo } : {}),
+        },
       });
     });
     await audit(me.id, "po_received", "PurchaseOrder", poId);
     refresh();
-    return { ok: true, message: `נוספו ${units} יחידות למלאי` };
+    return { ok: true, message: `נקלטו ${units} יחידות` };
   });
+}
+
+// ---------------------------------------------------------------- new products: approve + price
+
+/**
+ * The goods of a new product arrived: the owner sets the selling price and
+ * category, and only now the product is created, with the received quantity
+ * in stock. "Publish" puts it on the site right away; otherwise it is a draft.
+ */
+export async function pricePoItem(_p: ActionState, fd: FormData): Promise<ActionState> {
+  const me = await requireAdmin("MANAGER");
+  let productId = "";
+  const result = await handle(async () => {
+    const itemId = id(fd, "itemId");
+    const price = shekels(fd, "price", true)!;
+    if (price <= 0) throw new FormError("יש להזין מחיר מכירה");
+    const categoryId = str(fd, "categoryId", { required: "יש לבחור קטגוריה", max: 40 });
+    const name = str(fd, "name", { required: "יש להזין שם מוצר", max: 200 });
+    const publish = bool(fd, "publish");
+    const barcode = optStr(fd, "barcode", 40);
+
+    productId = await db.$transaction(async (tx) => {
+      const item = await tx.purchaseOrderItem.findUnique({ where: { id: itemId }, include: { purchaseOrder: true } });
+      if (!item || !item.isNew) throw new FormError("השורה לא נמצאה");
+      if (item.pricedAt) throw new FormError("המוצר כבר תומחר ונוסף לאתר");
+      if (item.receivedQty <= 0) throw new FormError("אפשר לתמחר רק אחרי שהסחורה התקבלה");
+      if (!(await tx.category.findUnique({ where: { id: categoryId } }))) throw new FormError("הקטגוריה לא נמצאה");
+
+      let slug = slugify(name) || `product-${Date.now().toString(36)}`;
+      if (await tx.product.findUnique({ where: { slug } })) slug = `${slug}-${Date.now().toString(36)}`;
+      let sku = (str(fd, "sku", { max: 60 }) || item.sku || "").trim();
+      if (!sku || (await tx.productVariant.findUnique({ where: { sku } })))
+        sku = `PO${item.purchaseOrder.number}-${item.id.slice(-5).toUpperCase()}`;
+
+      const product = await tx.product.create({
+        data: {
+          name,
+          slug,
+          categoryId,
+          supplierId: item.purchaseOrder.supplierId,
+          status: publish ? "ACTIVE" : "DRAFT",
+          variants: { create: { sku, barcode, price, costPrice: item.unitCost || null, stock: 0 } },
+        },
+        include: { variants: true },
+      });
+      const variantId = product.variants[0].id;
+      await changeStock(variantId, item.receivedQty, "RESTOCK", {
+        userId: me.id,
+        note: `הזמנת רכש #${item.purchaseOrder.number}${item.purchaseOrder.invoiceNos ? ` · חשבונית ${item.purchaseOrder.invoiceNos}` : ""}`,
+      }, tx);
+      await tx.purchaseOrderItem.update({ where: { id: item.id }, data: { variantId, sku, name, pricedAt: new Date() } });
+      return product.id;
+    });
+    await audit(me.id, "po_item_priced", "Product", productId);
+    refresh();
+    return { ok: true, message: publish ? "המוצר נוסף לאתר" : "המוצר נוסף כטיוטה" };
+  });
+  return result;
 }

@@ -26,7 +26,7 @@ export default async function PurchaseOrdersPage({ searchParams }: { searchParam
       where,
       orderBy: { createdAt: "desc" },
       take: 200,
-      include: { supplier: { select: { name: true } }, items: { select: { qty: true, receivedQty: true, unitCost: true } } },
+      include: { supplier: { select: { name: true } }, items: { select: { qty: true, receivedQty: true, unitCost: true, isNew: true, pricedAt: true } } },
     }),
     db.supplier.findMany({ select: { id: true, name: true, isActive: true }, orderBy: { name: "asc" } }),
     getVatRate(),
@@ -34,6 +34,8 @@ export default async function PurchaseOrdersPage({ searchParams }: { searchParam
   const active = suppliers.filter((s) => s.isActive);
   const open = orders.filter((o) => o.status === "SENT" || o.status === "PARTIAL");
   const openValue = open.reduce((s, o) => s + poTotals(o.items, vatRate).net, 0);
+  const waiting = (o: (typeof orders)[number]) => o.items.filter((i) => i.isNew && !i.pricedAt && i.receivedQty > 0).length;
+  const toPrice = orders.reduce((s, o) => s + waiting(o), 0);
   const filtered = Boolean(sp.supplier || status);
 
   return (
@@ -76,6 +78,7 @@ export default async function PurchaseOrdersPage({ searchParams }: { searchParam
           <div className="card kpi"><span className="label">הזמנות פתוחות</span><span className="value">{open.length}</span><span className="note">נשלחו ועוד לא התקבלו במלואן</span></div>
           <div className="card kpi"><span className="label">שווי הזמנות פתוחות</span><span className="value">₪{formatPrice(openValue)}</span><span className="note">לפני מע&quot;מ</span></div>
           <div className="card kpi"><span className="label">טיוטות</span><span className="value">{orders.filter((o) => o.status === "DRAFT").length}</span><span className="note">עוד לא נשלחו לספק</span></div>
+          <div className="card kpi"><span className="label">מוצרים חדשים לתמחור</span><span className="value" style={{ color: toPrice ? "var(--text-orange-ink)" : undefined }}>{toPrice}</span><span className="note">הגיעו ומחכים לאישור שלך</span></div>
         </section>
 
         <form method="get" className="card form-section" aria-label="סינון הזמנות רכש">
@@ -118,7 +121,10 @@ export default async function PurchaseOrdersPage({ searchParams }: { searchParam
                       <td>{o.items.length}</td>
                       <td>{o.status === "PARTIAL" ? `${got} / ${t.units}` : t.units}</td>
                       <td>₪{formatPrice(t.net)}</td>
-                      <td><span className={`pill ${PO_STATUS[o.status].cls}`}>{PO_STATUS[o.status].label}</span></td>
+                      <td>
+                        <span className={`pill ${PO_STATUS[o.status].cls}`}>{PO_STATUS[o.status].label}</span>
+                        {waiting(o) > 0 && <> <span className="pill orange">ממתין לתמחור</span></>}
+                      </td>
                       <td>{formatDate(o.createdAt)}</td>
                       <td>{o.expectedAt ? formatDate(o.expectedAt) : "-"}</td>
                     </tr>
